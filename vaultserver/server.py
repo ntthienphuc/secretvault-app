@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import ipaddress
+import os
+import socket
 import mimetypes
 import re
 import secrets
@@ -23,6 +25,12 @@ from .store import Store, canonical, digest, now, uid
 
 class VaultHTTPServer(ThreadingHTTPServer):
     daemon_threads = True
+    allow_reuse_address = os.name != "nt"
+
+    def server_bind(self):
+        if os.name == "nt":
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+        super().server_bind()
 
     def __init__(self, address, store: Store, public_dir, secure=False, behind_proxy=False, allowed_networks=(), lan_host_id=None):
         super().__init__(address, Handler)

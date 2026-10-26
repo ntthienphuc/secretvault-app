@@ -3,6 +3,10 @@ __pycache__/
 *.pyc
 live-qa.txt
 .venv/
+.venv-cloud/
+.local/
+hosting/hf-upload/
+archive/v2_3_before_cloud/
 build/
 dist/
 packaging/client-bootstrap/
@@ -10,5 +14,6 @@ release/
 audit/runtime-*/
 audit/installer-*/
 audit/lan-*/
+audit/split-*/
 *.db-wal
 *.db-shm
