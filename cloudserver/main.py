@@ -19,6 +19,7 @@ from .store import CloudStore
 
 
 def create_app(*, with_gradio=True, serve_web=True):
+    os.environ.setdefault("HF_HUB_DISABLE_PROGRESS_BARS", "1")
     on_hf = bool(os.getenv("SPACE_ID"))
     persistent = Path(os.getenv("SV_PERSISTENT_DIR", "/data/secretvault" if on_hf else "audit/runtime-cloud/persistent"))
     if on_hf and not Path("/data").is_dir():

@@ -28,6 +28,7 @@ class CloudStore(Store):
     def __init__(self, runtime: Path, persistent: Path):
         self.durable = False
         self.last_snapshot = 0
+        self._active_connection = None
         self.persistent = persistent.resolve()
         self.persistent.mkdir(parents=True, exist_ok=True)
         self.snapshots = self.persistent / "metadata"
@@ -56,10 +57,28 @@ class CloudStore(Store):
         with self.db() as db:
             self.snapshot(db)
         self.trim_snapshots()
+        self.setup_required = not bool(self.one("SELECT user_id FROM accounts WHERE role='admin'"))
+
+    @contextmanager
+    def atomic(self):
+        """One HTTP operation, one transaction and one durable snapshot."""
+        with self.lock:
+            if self._active_connection is not None:
+                yield
+                return
+            with self.db() as connection:
+                self._active_connection = connection
+                try:
+                    yield
+                finally:
+                    self._active_connection = None
 
     @contextmanager
     def db(self):
         with self.lock:
+            if self._active_connection is not None:
+                yield self._active_connection
+                return
             connection = sqlite3.connect(self.database, timeout=30)
             connection.row_factory = sqlite3.Row
             connection.execute("PRAGMA foreign_keys=ON")

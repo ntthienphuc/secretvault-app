@@ -17,6 +17,10 @@ from . import VERSION
 from .store import FILE_LIMIT, TOTAL_QUOTA, USER_QUOTA
 
 
+class AbortReply(Exception):
+    pass
+
+
 class CloudHandler(Handler):
     def log_message(self, *args):
         # Do not log user email query strings or authentication bodies.
@@ -57,11 +61,35 @@ class CloudHandler(Handler):
 
     def dispatch(self, method):
         path = urlparse(self.path).path
+        if path == "/api/health":
+            # Render's liveness probe must never wait for remote bucket I/O or
+            # another user's upload transaction. Slow writes must not kill it.
+            return self.dispatch_cloud(method)
+        self._capture_reply = True
+        self._pending_reply = None
+        try:
+            with self.store.atomic():
+                self.dispatch_cloud(method)
+                if self._pending_reply and self._pending_reply[2] >= 400:
+                    raise AbortReply()
+            if path == "/api/admin/claim" and self._pending_reply and self._pending_reply[2] < 300:
+                self.store.setup_required = False
+        except AbortReply:
+            pass
+        except Exception:
+            self._pending_reply = (json.dumps({"error": "Không thể lưu dữ liệu. Vui lòng thử lại."}, ensure_ascii=False).encode(), "application/json; charset=utf-8", 503)
+        finally:
+            self._capture_reply = False
+        if self._pending_reply:
+            super().send_bytes(*self._pending_reply)
+
+    def dispatch_cloud(self, method):
+        path = urlparse(self.path).path
         try:
             self.check_origin()
             if path == "/api/health" and method == "GET":
                 self.json({"ok": True, "app": "SecretVault", "version": VERSION, "maxFileSize": FILE_LIMIT,
-                           "chunkSize": CHUNK_SIZE, "storage": "persistent-private-bucket", "setupRequired": not self.store.one("SELECT user_id FROM accounts WHERE role='admin'")})
+                           "chunkSize": CHUNK_SIZE, "storage": "persistent-private-bucket", "setupRequired": self.store.setup_required})
                 return
             if path.startswith("/api/admin/"):
                 user = self.current_user()
@@ -184,15 +212,8 @@ class CloudHandler(Handler):
         require(0 <= body["manifest"]["size"] <= FILE_LIMIT, "Mỗi tệp tối đa 25 MiB.", 413)
         intent = self.store.one("SELECT expected FROM uploads WHERE file_id=?", (file_id,))
         require(not intent or intent["expected"] < 0 or intent["expected"] == body["manifest"]["size"], "Kích thước tải lên không khớp.")
-        self._capture_reply = True
-        self._pending_reply = None
-        try:
-            super().commit_file(user, file_id, body)
-            self.store.event(user["id"], "file.uploaded", body["manifest"]["name"])
-        finally:
-            self._capture_reply = False
-        if self._pending_reply:
-            super().send_bytes(*self._pending_reply)
+        super().commit_file(user, file_id, body)
+        self.store.event(user["id"], "file.uploaded", body["manifest"]["name"])
 
     def share(self, user, body):
         require(self.store.settings(body["payload"]["recipientId"])["enabled"], "Người nhận đang tạm dừng.", 403)
@@ -204,31 +225,16 @@ class CloudHandler(Handler):
         active = self.store.one("SELECT COUNT(*) n,COALESCE(SUM(json_extract(offer,'$.size')),0) bytes FROM live WHERE expires>? AND state IN ('offered','accepted','sent')", (now(),))
         require(active["n"] < 12 and active["bytes"] + offer["size"] <= 100 * 1048576, "Đang có nhiều phiên gửi. Thử lại sau ít phút.", 429)
         require(self.store.settings(offer["recipientId"])["enabled"], "Người nhận đang tạm dừng.", 403)
-        self._capture_reply = True
-        self._pending_reply = None
-        try:
-            super().live_offer(user, body)
-            self.store.event(user["id"], "transfer.invited", offer["name"])
-        finally:
-            self._capture_reply = False
-        if self._pending_reply:
-            super().send_bytes(*self._pending_reply)
+        super().live_offer(user, body)
+        self.store.event(user["id"], "transfer.invited", offer["name"])
 
     def live_update(self, user, live_id, action, body):
-        # Only audit verified state changes. Capture inherited success before flushing.
-        self._pending_reply = None
-        self._capture_reply = True
-        try:
-            super().live_update(user, live_id, action, body)
-            if action == "ack":
-                self.store.execute("DELETE FROM live_chunks WHERE live_id=?", (live_id,))
-            if action != "chunk":
-                row = self.store.one("SELECT offer FROM live WHERE id=?", (live_id,))
-                self.store.event(user["id"], "transfer." + action, json.loads(row["offer"])["name"])
-        finally:
-            self._capture_reply = False
-        if self._pending_reply:
-            super().send_bytes(*self._pending_reply)
+        super().live_update(user, live_id, action, body)
+        if action == "ack":
+            self.store.execute("DELETE FROM live_chunks WHERE live_id=?", (live_id,))
+        if action != "chunk":
+            row = self.store.one("SELECT offer FROM live WHERE id=?", (live_id,))
+            self.store.event(user["id"], "transfer." + action, json.loads(row["offer"])["name"])
 
     def send_bytes(self, data, content_type="application/octet-stream", status=200):
         if getattr(self, "_capture_reply", False):
