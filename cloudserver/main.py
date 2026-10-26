@@ -50,6 +50,9 @@ def create_app(*, with_gradio=True):
 
     @app.middleware("http")
     async def ingress(request: Request, call_next):
+        if not request.url.path.startswith("/api/") and request.method not in ("GET", "HEAD"):
+            # The status page is read-only. Do not expose Gradio uploads or queues.
+            return JSONResponse({"error": "Method not allowed"}, status_code=405)
         if request.url.path.startswith("/api/"):
             source = request.headers.get("origin")
             if source and source not in allowed:
@@ -89,7 +92,7 @@ def create_app(*, with_gradio=True):
         with gr.Blocks(title="SecretVault API", analytics_enabled=False) as status:
             gr.Markdown("# SecretVault\nSecure file sharing service\n\nThe application and administrator dashboard are available on the SecretVault web client.")
             gr.Markdown("[Open SecretVault](" + frontend + ")\n\nService health: `/api/health`. No files or account information are available on this page.")
-        app = gr.mount_gradio_app(app, status, path="/", blocked_paths=[str(persistent.resolve()), str(runtime.resolve()), "/data"], allowed_paths=[])
+        app = gr.mount_gradio_app(app, status, path="/", blocked_paths=[str(persistent.resolve()), str(runtime.resolve()), "/data"], allowed_paths=[], ssr_mode=False, footer_links=[], run_history=False, enable_monitoring=False, mcp_server=False, max_file_size=1)
     else:
         from fastapi.staticfiles import StaticFiles
         from fastapi.responses import FileResponse
