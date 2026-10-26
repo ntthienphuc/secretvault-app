@@ -210,6 +210,7 @@ let senderDh;
 let receiverDh;
 let senderKey;
 let receiverKey;
+let liveCiphertext;
 await check("Signed ephemeral DH offer is accepted for the correct recipient", async () => {
   senderDh = C.ephemeral();
   receiverDh = C.ephemeral();
@@ -237,6 +238,7 @@ await check("Live payload relay preserves GCM tags and signed hashes", async () 
   const payload = { purpose: "live-finish-v2", id: offer.id, transcriptHash: senderKey.transcriptHash, hashes: [hash] };
   await request(`/api/live/${offer.id}/finish`, { user: alice, method: "POST", body: { payload, signature: await C.sign(alice.identity, payload) } });
   const received = await request(`/api/live/${offer.id}/chunks/0`, { user: bob });
+  liveCiphertext = received;
   const decrypted = await C.decrypt(receiverKey.key, received, C.liveAad(receiverKey.transcriptHash, 0, 1));
   assert.deepEqual(decrypted, plain);
   await request(`/api/live/${offer.id}/ack`, { user: bob, method: "POST", body: {} });
@@ -244,10 +246,12 @@ await check("Live payload relay preserves GCM tags and signed hashes", async () 
   assert.equal(remote.live.find((item) => item.id === offer.id).state, "complete");
 });
 await check("Live ciphertext cannot be transplanted into a different transcript", async () => {
-  const received = await request(`/api/live/${offer.id}/chunks/0`, { user: bob });
-  await assert.rejects(C.decrypt(receiverKey.key, received, C.liveAad("0".repeat(64), 0, 1)));
+  await assert.rejects(C.decrypt(receiverKey.key, liveCiphertext, C.liveAad("0".repeat(64), 0, 1)));
 });
 await check("Unrelated users cannot read any live payload", async () => request(`/api/live/${offer.id}/chunks/0`, { user: mallory, status: 403 }));
+if ((await request("/api/health")).version.startsWith("3.")) {
+  await check("Hosted transfers release temporary ciphertext after receiver acknowledgment", async () => request(`/api/live/${offer.id}/chunks/0`, { user: bob, status: 404 }));
+}
 
 const report = { timestamp: new Date().toISOString(), target: base, passed: results.length, checks: results };
 await writeFile(reportPath, JSON.stringify(report, null, 2));
