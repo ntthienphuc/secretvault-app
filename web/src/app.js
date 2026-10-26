@@ -5,6 +5,7 @@ import { authView, shell, esc } from "./view.js";
 const root = document.getElementById("app");
 const state = {
   authMode: "login", loginEmail: "", user: null, identity: null, encryptedBundle: null,
+  service: "connecting",
   remote: { users: [], contacts: [], files: [], shares: [], live: [], activity: [] },
   view: location.pathname === "/admin" ? "admin" : location.pathname === "/setup" ? "setup" : "vault", search: "", busy: "", modal: null, candidate: null, admin: null, trash: null,
   liveFile: null, connected: true, remoteHash: "", signatures: new Map(), verified: new Map(),
@@ -65,6 +66,7 @@ function fail(error) {
   if (/fingerprint|public key|private key|AES|GCM|SHA|HKDF|ElGamal|transcript|manifest|envelope|chữ ký|khóa|chunk|IV|DH/i.test(message)) {
     message = "Không xác minh được tính an toàn của tệp hoặc kết nối. Thao tác đã dừng; vui lòng thử lại hoặc liên hệ quản trị viên.";
   }
+  if (error.name === "NotSupportedError") message = "Hãy cập nhật Chrome, Edge hoặc Safari để dùng SecretVault trên thiết bị này.";
   toast(message, true);
   render();
 }
@@ -132,6 +134,7 @@ async function auth(form) {
   const email = form.querySelector("#auth-email").value.trim().toLowerCase();
   const password = form.querySelector("#auth-password").value;
   const register = state.authMode === "register";
+  C.assert(state.service === "ready", "Máy chủ đang kết nối. Vui lòng chờ hoặc bấm Kết nối lại.");
   const name = form.querySelector("#auth-name")?.value.trim();
   if (register) {
     C.assert(name && name.length <= 80, "Nhập tên hiển thị từ 1 đến 80 ký tự");
@@ -511,6 +514,8 @@ async function action(event) {
   if (action === "auth-mode") {
     state.authMode = element.dataset.mode || (state.authMode === "login" ? "register" : "login");
     render();
+  } else if (action === "check-service") {
+    await checkService();
   } else if (action === "logout") {
     await logout();
   } else if (action === "upload") {
@@ -673,6 +678,27 @@ root.addEventListener("input", (event) => {
 // Reloading closes the local unlocked session and requires a normal sign-in.
 api.setToken("");
 render();
+async function checkService() {
+  state.service = "connecting";
+  updateService();
+  try {
+    await api.get("/api/health");
+    state.service = "ready";
+  } catch {
+    state.service = "unavailable";
+  }
+  updateService();
+}
+function updateService() {
+  const status = document.getElementById("service-status");
+  if (status) {
+    status.className = "service-status " + state.service;
+    status.innerHTML = state.service === "ready" ? "Đã kết nối an toàn" : state.service === "connecting" ? "Đang kết nối máy chủ… Lần mở đầu có thể cần một phút." : 'Máy chủ chưa sẵn sàng. <button type="button" data-action="check-service">Kết nối lại</button>';
+  }
+  const submit = root.querySelector('form[data-form="auth"] button[type="submit"]');
+  if (submit) submit.disabled = state.service !== "ready" || !!state.busy;
+}
+checkService();
 document.addEventListener("keydown", (event) => { if (event.key === "Escape" && state.modal) { state.modal = null; render(); } });
 setInterval(async () => {
   if (!state.user || state.polling) {

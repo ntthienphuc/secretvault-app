@@ -146,7 +146,7 @@ class CloudHandler(Handler):
             files.append({"id": row["id"], "name": manifest.get("name", row["upload_name"] or "Đang tải lên"), "owner": row["owner"], "size": manifest.get("size", max(0, row["expected"] or 0)), "stored": written, "state": "trash" if row["deleted"] else "ready" if row["ready"] else "uploading", "created": row["created"]})
         events = [dict(row) for row in self.store.all("SELECT e.id,e.kind,e.subject,e.detail,e.created,u.name actor FROM events e LEFT JOIN users u ON u.id=e.actor_id ORDER BY e.created DESC LIMIT 60")]
         active = self.store.one("SELECT COUNT(*) n FROM live WHERE expires>? AND state IN ('offered','accepted','sent')", (now(),))["n"]
-        self.json({"users": users, "files": files, "events": events, "storage": {**self.store.usage(), "quota": TOTAL_QUOTA}, "summary": {"users": len(users), "online": sum(u["online"] for u in users), "files": sum(f["state"] == "ready" for f in files), "activeTransfers": active, "shares": self.store.one("SELECT COUNT(*) n FROM shares WHERE revoked=0")["n"]}, "service": {"version": VERSION, "persistence": "Private storage bucket", "maxFileSize": FILE_LIMIT, "maxUsers": 50}})
+        self.json({"users": users, "files": files, "events": events, "storage": {**self.store.usage(), "quota": TOTAL_QUOTA}, "summary": {"users": len(users), "online": sum(u["online"] for u in users), "files": self.store.one("SELECT COUNT(*) n FROM files WHERE ready=1 AND deleted=0")["n"], "activeTransfers": active, "shares": self.store.one("SELECT COUNT(*) n FROM shares WHERE revoked=0")["n"]}, "service": {"version": VERSION, "persistence": "Private storage bucket", "maxFileSize": FILE_LIMIT, "maxUsers": 50}})
 
     def begin_file(self, user, body):
         expected = body.get("size", -1)

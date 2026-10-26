@@ -32,6 +32,11 @@ export async function request(path, options = {}) {
     exception.status = response.status;
     throw exception;
   }
+  if (!options.binary && !response.headers.get("Content-Type")?.includes("application/json")) {
+    const error = new Error("Máy chủ đang khởi động. Chờ khoảng một phút rồi thử lại.");
+    error.status = 503;
+    throw error;
+  }
   return options.binary ? new Uint8Array(await response.arrayBuffer()) : response.json();
 }
 

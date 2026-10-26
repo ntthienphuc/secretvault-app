@@ -39,7 +39,7 @@ class BucketStore(CloudStore):
         self.bucket_id = bucket_id
         info = api.bucket_info(bucket_id)
         # Private bucket contents contain account metadata; fail closed if public.
-        if not getattr(info, "private", getattr(info, "visibility", "private") == "private"):
+        if getattr(info, "private", False) is not True:
             raise RuntimeError("SecretVault requires a private storage bucket")
         snapshot_dir = persistent.resolve() / "metadata"
         snapshot_dir.mkdir(parents=True, exist_ok=True)
