@@ -15,7 +15,8 @@ from vaultserver.server import VaultHTTPServer
 from vaultserver.store import now
 
 checks=[]
-with tempfile.TemporaryDirectory() as p:\n+    root=Path(p)
+with tempfile.TemporaryDirectory() as p:
+    root=Path(p)
     store=CloudStore(root/'runtime',root/'bucket')
     store.execute('INSERT INTO users VALUES(?,?,?,?,?,?,?,?)',('u_test','qa@example.test','QA','salt','opaque','{}','{}',1))
     store.execute("INSERT INTO accounts VALUES(?,'user',1,?)",('u_test',104857600))
