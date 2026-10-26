@@ -55,6 +55,7 @@ class CloudStore(Store):
         # Verify the mount is writable before accepting accounts or files.
         with self.db() as db:
             self.snapshot(db)
+        self.trim_snapshots()
 
     @contextmanager
     def db(self):

@@ -11,7 +11,6 @@ from pathlib import Path
 
 VERSION = "3.0.0"
 WEB_URL = "https://secretvault-online.vercel.app"
-API_URL = "https://thienphuc12339-secretvault-api.hf.space"
 
 
 def main():
@@ -23,12 +22,22 @@ def main():
     data.mkdir(parents=True, exist_ok=True)
     if args.diagnose:
         import urllib.request
-        checks = {"version": VERSION, "web": WEB_URL, "api": API_URL}
-        for label, url in (("webStatus", WEB_URL), ("apiStatus", API_URL + "/api/health")):
-            with urllib.request.urlopen(url, timeout=90) as response:
-                checks[label] = response.status
+        from urllib.parse import urlparse
+        checks = {"version": VERSION, "web": WEB_URL, "ok": False}
+        try:
+            with urllib.request.urlopen(WEB_URL + "/service.json", timeout=30) as response:
+                api_url = json.load(response)["apiBase"]
+            if urlparse(api_url).scheme != "https":
+                raise ValueError("HTTPS API required")
+            checks["api"] = api_url
+            for label, url in (("webStatus", WEB_URL), ("apiStatus", api_url + "/api/health")):
+                with urllib.request.urlopen(url, timeout=90) as response:
+                    checks[label] = response.status
+            checks["ok"] = True
+        except Exception as error:
+            checks["error"] = str(error)[:240]
         (data / "diagnostics.json").write_text(json.dumps(checks, indent=2), encoding="utf8")
-        return 0
+        return 0 if checks["ok"] else 1
     if args.browser:
         webbrowser.open(WEB_URL)
         return 0

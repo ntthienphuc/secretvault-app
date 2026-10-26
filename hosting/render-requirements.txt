@@ -1,0 +1,2 @@
+-r cloud-requirements.txt
+huggingface_hub==2.3.0

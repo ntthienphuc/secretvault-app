@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: secretvault-api
+    runtime: python
+    plan: free
+    region: singapore
+    buildCommand: pip install -r hosting/render-requirements.txt
+    startCommand: python -m cloudserver.main
+    healthCheckPath: /api/health
+    autoDeployTrigger: off
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.12
+      - key: SV_ALLOWED_ORIGINS
+        value: https://secretvault-online.vercel.app
+      - key: SV_FRONTEND_URL
+        value: https://secretvault-online.vercel.app
+      - key: SV_BUCKET_ID
+        value: thienphuc12339/secretvault-api-storage
+      - key: HF_TOKEN
+        sync: false
+      - key: SV_ADMIN_CLAIM_HASH
+        sync: false

@@ -18,13 +18,19 @@ from .handler import CloudHandler
 from .store import CloudStore
 
 
-def create_app(*, with_gradio=True):
+def create_app(*, with_gradio=True, serve_web=True):
     on_hf = bool(os.getenv("SPACE_ID"))
     persistent = Path(os.getenv("SV_PERSISTENT_DIR", "/data/secretvault" if on_hf else "audit/runtime-cloud/persistent"))
     if on_hf and not Path("/data").is_dir():
         raise RuntimeError("Attach the private storage bucket at /data before starting SecretVault")
     runtime = Path(os.getenv("SV_RUNTIME_DIR", str(Path(tempfile.gettempdir()) / "secretvault-cloud")))
-    store = CloudStore(runtime, persistent)
+    if os.getenv("SV_BUCKET_ID"):
+        from .bucket import BucketStore
+        store = BucketStore(runtime, persistent, os.environ["SV_BUCKET_ID"])
+    else:
+        if os.getenv("RENDER"):
+            raise RuntimeError("Configure private bucket persistence before starting the online service")
+        store = CloudStore(runtime, persistent)
     web = Path(os.getenv("SV_WEB_DIR", "web"))
     server = VaultHTTPServer(("127.0.0.1", 0), store, web, behind_proxy=True)
     server.RequestHandlerClass = CloudHandler
@@ -93,7 +99,7 @@ def create_app(*, with_gradio=True):
             gr.Markdown("# SecretVault\nSecure file sharing service\n\nThe application and administrator dashboard are available on the SecretVault web client.")
             gr.Markdown("[Open SecretVault](" + frontend + ")\n\nService health: `/api/health`. No files or account information are available on this page.")
         app = gr.mount_gradio_app(app, status, path="/", blocked_paths=[str(persistent.resolve()), str(runtime.resolve()), "/data"], allowed_paths=[], ssr_mode=False, footer_links=[], run_history=False, enable_monitoring=False, mcp_server=False, max_file_size=1)
-    else:
+    elif serve_web:
         from fastapi.staticfiles import StaticFiles
         from fastapi.responses import FileResponse
         @app.get("/admin")
@@ -101,9 +107,14 @@ def create_app(*, with_gradio=True):
         async def spa():
             return FileResponse(web / "index.html")
         app.mount("/", StaticFiles(directory=str(web), html=True), name="web")
+    else:
+        @app.get("/")
+        async def service_status():
+            return {"app": "SecretVault", "status": "ready", "web": os.getenv("SV_FRONTEND_URL", "https://secretvault-online.vercel.app")}
     return app
 
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(create_app(with_gradio=not bool(os.getenv("SV_LOCAL_WEB"))), host="0.0.0.0", port=int(os.getenv("PORT", "7860")))
+    on_render = bool(os.getenv("RENDER"))
+    uvicorn.run(create_app(with_gradio=not on_render and not bool(os.getenv("SV_LOCAL_WEB")), serve_web=not on_render), host="0.0.0.0", port=int(os.getenv("PORT", "7860")))

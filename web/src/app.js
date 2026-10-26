@@ -210,9 +210,9 @@ async function upload(file) {
   const prefix = C.randomBytes(8);
   const total = Math.max(1, Math.ceil(file.size / C.CHUNK_SIZE));
   progress("Đang chuẩn bị tải lên · " + file.name);
-  await api.post("/api/files", { id: fileId, name: file.name, size: file.size });
   const chunks = [];
   try {
+    await api.post("/api/files", { id: fileId, name: file.name, size: file.size });
     for (let index = 0; index < total; index += 1) {
       progress(`Đang tải lên ${Math.round(index / total * 100)}% · ${file.name}`);
       const plaintext = new Uint8Array(await file.slice(index * C.CHUNK_SIZE, (index + 1) * C.CHUNK_SIZE).arrayBuffer());

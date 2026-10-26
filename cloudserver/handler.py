@@ -220,6 +220,8 @@ class CloudHandler(Handler):
         self._capture_reply = True
         try:
             super().live_update(user, live_id, action, body)
+            if action == "ack":
+                self.store.execute("DELETE FROM live_chunks WHERE live_id=?", (live_id,))
             if action != "chunk":
                 row = self.store.one("SELECT offer FROM live WHERE id=?", (live_id,))
                 self.store.event(user["id"], "transfer." + action, json.loads(row["offer"])["name"])
