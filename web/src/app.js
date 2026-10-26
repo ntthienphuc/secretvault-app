@@ -233,6 +233,7 @@ async function upload(file) {
       name: file.name, size: file.size, mime: file.type || "application/octet-stream",
       created: Date.now(), chunkSize: C.CHUNK_SIZE, chunks,
     };
+    progress("100% · Đang hoàn tất lưu tệp · " + file.name);
     await api.post(`/api/files/${fileId}/commit`, {
       manifest, signature: await C.sign(state.identity, manifest),
       ownerWrap: await C.wrapOwner(state.identity, fileId, ownerId, key),
@@ -281,6 +282,7 @@ function download(bytes, name, type = "application/octet-stream") {
 async function openFile(fileId, save) {
   const file = ownFile(fileId);
   C.assert(file, "Tệp không còn khả dụng; làm mới vault");
+  progress("Đang chuẩn bị tệp · " + file.manifest.name);
   const key = await fileKey(file);
   const plaintext = [];
   const manifest = file.manifest;
@@ -319,6 +321,7 @@ async function openFile(fileId, save) {
 
 async function shareFile(form) {
   const file = ownFile(form.dataset.id);
+  progress("Đang tìm người nhận…");
   let recipient = userById(form.querySelector("#share-recipient").value);
   const email = form.querySelector("#share-email")?.value.trim().toLowerCase();
   if (email) {
@@ -601,6 +604,7 @@ root.addEventListener("submit", (event) => {
     if (form.dataset.form === "auth") {
       await auth(form);
     } else if (form.dataset.form === "contact") {
+      progress("Đang tìm liên hệ…");
       state.candidate = await api.get("/api/directory?email=" + encodeURIComponent(form.querySelector("#contact-email").value.trim().toLowerCase()));
       C.assert(state.candidate.id !== state.user.id, "Đây là tài khoản của bạn");
       if (!userById(state.candidate.id)) state.remote.users.push(state.candidate);
