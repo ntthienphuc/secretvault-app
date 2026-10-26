@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: secretvault-api
+    name: secretvault-api-thienphuc
     runtime: python
     plan: free
     region: singapore
