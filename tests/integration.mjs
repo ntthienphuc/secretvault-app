@@ -255,4 +255,10 @@ if ((await request("/api/health")).version.startsWith("3.")) {
 
 const report = { timestamp: new Date().toISOString(), target: base, passed: results.length, checks: results };
 await writeFile(reportPath, JSON.stringify(report, null, 2));
+if (process.env.SV_TEST_RESUME_FILE) {
+  await writeFile(process.env.SV_TEST_RESUME_FILE, JSON.stringify({
+    base, password, fileId: file.id, plaintextHash: await C.hash(original),
+    users: [alice, bob, mallory].map(({ user }) => ({ email: user.email, name: user.name })),
+  }));
+}
 console.log(JSON.stringify({ passed: results.length, report: String(reportPath) }));
