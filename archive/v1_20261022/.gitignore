@@ -1,0 +1,4 @@
+secretvault.db
+__pycache__/
+*.pyc
+live-qa.txt

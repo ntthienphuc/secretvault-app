@@ -1,0 +1,14 @@
+secretvault.db
+__pycache__/
+*.pyc
+live-qa.txt
+.venv/
+build/
+dist/
+packaging/client-bootstrap/
+release/
+audit/runtime-*/
+audit/installer-*/
+audit/lan-*/
+*.db-wal
+*.db-shm

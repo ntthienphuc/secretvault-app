@@ -1,0 +1,52 @@
+{
+  "version": "2.2.0",
+  "validatedAt": "2026-10-26T12:41:54.968354+00:00",
+  "installer": {
+    "file": "SecretVault-Setup-2.2.0-x64.exe",
+    "bytes": 13680244,
+    "sha256": "756b31fc7d1878b43f0e16b6ac1bf297e050ba3d364cdb7eb4e3d9647d9d50eb"
+  },
+  "clientKit": {
+    "file": "SecretVault-LAN-Clients.zip",
+    "bytes": 3432,
+    "sha256": "b510b86d1444dbe27d408b3c283560f2cabc6caf5d300e0aa342b99c218caf18",
+    "publicFilesOnly": true
+  },
+  "host": {
+    "url": "https://192.168.1.3:8443",
+    "network": "192.168.1.0/24",
+    "version": "2.2.0",
+    "installedRuntimeServing": true,
+    "startupShortcutCreated": true,
+    "hostCertificateTrust": "awaiting Windows confirmation",
+    "dataDir": "C:\\Users\\thien\\AppData\\Local\\SecretVault\\v2",
+    "userAccountsSeeded": 0
+  },
+  "checks": {
+    "httpsApiAndCryptoPassed": 40,
+    "installedApiAndCryptoPassed": 40,
+    "installerAndLanPassed": 9,
+    "subnetRestrictionDeniedOutsideConfiguredRange": true,
+    "cryptoModuleUnchanged": true,
+    "missingCaTrustRejectedAsExpected": true
+  },
+  "browser": {
+    "target": "isolated localhost audit data",
+    "mismatchedPasswordConfirmationRejected": true,
+    "registrationOfTwoAccounts": true,
+    "busySubmitDisabled": true,
+    "duplicateEmailRejected": true,
+    "wrongPasswordRejected": true,
+    "logoutAndReloginRetainedFilesAndContacts": true,
+    "contactPinningBothSides": true,
+    "offlineShareVerifiedAfterSenderLogout": true,
+    "dhLiveTransferVerified": true
+  },
+  "limitations": [
+    "Windows host CA approval is still pending; Chrome LAN HTTPS was not bypassed",
+    "No access to the two physical client PCs; install client kit on each and verify from them",
+    "Reboot/login execution of Startup shortcut not tested",
+    "Native launcher button automation unavailable; startup tested",
+    "Browser Blob filesystem save not independently observed; payload bytes verified by integration suite"
+  ]
+}

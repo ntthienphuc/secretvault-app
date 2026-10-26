@@ -1,0 +1,19 @@
+{
+  "registrationAndLogin": true,
+  "realEncryptedFileUploads": 3,
+  "fileTypeFilters": true,
+  "nameSorting": true,
+  "search": true,
+  "listGridToggle": true,
+  "contactPinningBothSides": true,
+  "offlineEnvelopeAndRecipientVerification": true,
+  "dhLiveTransferBothSides": true,
+  "inspectorWholeContentVerification": true,
+  "logout": true,
+  "consoleErrorsStableRuns": 0,
+  "testedViewport": {
+    "width": 1707,
+    "height": 710
+  },
+  "horizontalOverflow": false
+}

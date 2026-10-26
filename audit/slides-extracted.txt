@@ -1,0 +1,1797 @@
+
+--- PAGE 1 ---
+Bài 6 – Hàm băm, Bẫy sập, Khóa công khai 
+và Chữ ký số
+Giảng viên: TS. Nguyễn Ngọc Trường Minh
+Khoa Điện – Điện tử
+Trường Đại học Quốc tế, ĐHQG-HCM
+nntminh@hcmiu.edu.vn
+T P. H ồ C h í M i n h , t h á n g 0 9 n ă m 2 0 2 6
+KHOA ĐÀO TẠO SAU ĐẠI HỌC
+M Ã H Ó A T H Ô N G T I N N Â N G C A O
+C O M 6 0 8
+
+--- PAGE 2 ---
+Mục tiêu học tập
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+2
+1. Phân biệt: hàm một chiều và hàm một chiều có cửa sập (bẫy sập)
+2. Trình bày: các tính chất an toàn, cấu trúc và tấn công ngày sinh của hàm 
+băm
+3. Thực hiện: trao khóa Diffie–Hellman và mã hóa ElGamal với số nhỏ
+4. Vận dụng: các lược đồ chữ ký số RSA, ElGamal, DSA, Schnorr
+5. Đánh giá: rủi ro thực tế: tái dùng k, MITM, hàm băm yếu, quản lý khóa
+
+--- PAGE 3 ---
+Nội dung bài giảng
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+3
+1
+Phần 1
+Hàm một chiều và hàm cửa sập
+2
+Phần 2
+Hàm băm mật mã
+3
+Phần 3
+Khóa công khai, Diffie–Hellman, 
+ElGamal
+4
+Phần 4
+Chữ ký số và PKI
+Mỗi phần có bài tập thực hành tại lớp  •  Cuối bài: bài tập về nhà và bài tập lập trình
+
+--- PAGE 4 ---
+Bốn mục tiêu an toàn thông tin
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+4
+Bảo mật
+Chỉ người được phép đọc 
+được
+→ AES, RSA, ElGamal
+Toàn vẹn
+Phát hiện mọi sửa đổi
+→ Hàm băm, MAC
+Xác thực
+Biết chắc ai là người gửi
+→ MAC, chữ ký số
+Chống chối bỏ
+Người ký không thể phủ 
+nhận
+→ Chữ ký số + PKI
+•
+Bài 4–5: mã hóa (đối xứng và RSA) giải quyết bảo mật
+•
+Bài 6: hàm băm + khóa công khai + chữ ký sốgiải quyết toàn vẹn, xác thực và chống chối bỏ
+
+--- PAGE 5 ---
+Phần 6.1. Hàm một chiều và hàm cửa sập
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+5
+• Mọi hệ mật khóa công khai đều dựa 
+trên một hàm dễ tính xuôi, khó tính 
+ngược – trừ khi biết "cửa sập".
+
+--- PAGE 6 ---
+6.1.1 Hàm một chiều (one-way function)
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+6
+x
+y = f(x)
+DỄ: thời gian đa thức
+KHÓ: không khả thi
+•
+Định nghĩa: f là hàm một chiều nếu
+–
+tính f(x) dễ(thuật toán thời gian đa thức)
+–
+với y = f(x) ngẫu nhiên, tìm được bất kỳx′ có f(x′) = y chỉ với xác 
+suất không đáng kể
+•
+Đặc điểm: công khai, không cần thông tin bí mật
+•
+Lưu ý lý thuyết: sự tồn tại của hàm một chiều chưa được 
+chứng minh (kéo theo P ≠ NP)
+Ẩn dụ
+•
+Đập vỡ một chiếc bình: dễ
+•
+Ghép lại nguyên vẹn: gần như không 
+thể
+•
+Tra danh bạ tên → số: dễ; số → tên: khó
+
+--- PAGE 7 ---
+6.1.2 Các ứng viên hàm một chiều
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+7
+Hàm
+Chiều thuận (dễ)
+Chiều ngược (khó)
+Ứng dụng
+Nhân số nguyên tố
+p, q → n = p·q
+Phân tích n → p, q
+RSA, Rabin
+Lũy thừa modulo
+x → gˣ mod p
+Logarit rời rạc (DLP)
+DH, ElGamal, DSA
+Nhân điểm elliptic
+k → k·P
+ECDLP
+ECDH, ECDSA
+Hàm băm
+M → H(M)
+Tìm tiền ảnh
+Mật khẩu, chữ ký
+Tổng tập con
+chọn tập → tổng
+tổng → tập con
+Knapsack (đã bị phá)
+Chiều thuận: nhân hai số 300 chữ số– vài micro giây
+Chiều ngược: phân tích số 600 chữ số – không khả thi với 
+máy cổ điển
+
+--- PAGE 8 ---
+6.1.3 Ví dụ: lũy thừa modulo 17
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+8
+k
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+3ᵏ mod 17
+3
+9
+10
+13
+5
+15
+11
+16
+14
+8
+7
+4
+12
+2
+6
+1
+Chiều thuận – tính 3¹³ mod 17
+13 = 8 + 4 + 1
+3¹ = 3, 3⁴ = 13, 3⁸ = 16
+3¹³ ≡ 16·13·3 = 624 ≡ 12
+Chỉ cần ~log₂(k) phép nhân
+Chiều ngược – tìm k: 3ᵏ≡ 13 (mod 17)
+•
+Không có công thức trực tiếp
+•
+Phải thử lần lượt k = 1, 2, 3, … → k = 4
+•
+Với p ~ 2²⁰⁴⁸: thử ~p giá trị (hoặc √p với thuật 
+toán tốt hơn) – không khả thi
+
+--- PAGE 9 ---
+6.1.4 Hàm một chiều có cửa sập (trapdoor)
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+9
+x
+f(x)
+Dễ với mọi người (khóa công khai)
+Dễ CHỈ KHI biết cửa sập t (khóa bí mật)
+•
+Định nghĩa: hàm một chiều f có thêm thông tin bí mật t (cửa 
+sập) sao cho biết t thì đảo f dễ dàng
+•
+Là nền tảng của mật mã khóa công khai (Diffie – Hellman 
+1976 đề xuất khái niệm)
+•
+Ví dụ RSA: f(x) = xᵉmod n
+–
+Cửa sập: p, q (hoặc d) → x = f(x)ᵈmod n
+•
+Ví dụ Rabin: f(x) = x² mod n, cửa sập là p, q
+Một chiều
+Có cửa sập
+Tính xuôi
+Dễ
+Dễ
+Tính ngược
+Khó với mọi người
+Dễ nếu biết t
+Bí mật
+Không có
+Cửa sập t
+Ứng dụng
+Băm, mật khẩu
+Mã hóa, chữ ký
+
+--- PAGE 10 ---
+6.1.5 Ví dụ: RSA như một hàm cửa sập
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+10
+•
+Cửa sập (Bob giữ bí mật):
+–
+p = 885320963,  q = 238855417
+•
+Công khai: n = p·q = 211463707796206571, e = 9007
+•
+Thông điệp "cat": a = 01, …, z = 26 → m = 030120 = 30120
+•
+Chiều thuận (Alice): c = m⁹⁰⁰⁷ mod n
+–
+= 113535859035722866
+•
+Chiều ngược (Bob): d = 9007⁻¹ mod (p−1)(q−1)
+–
+= 116402471153538991;  cᵈmod n = 30120 → "cat"
+Không có cửa sập
+Eve biết n, e, c nhưng cần φ(n) ⇔phải phân tích 
+n (18 chữ số – dễ với máy; 617 chữ số – không 
+khả thi)
+Hiệu chỉnh so với slide nhóm 3
+Điều kiện đúng: gcd(e, (p − 1)(q − 1)) = 1 và de ≡ 1 
+mod (p − 1)(q − 1) (không phải "g − 1", "GDC")
+
+--- PAGE 11 ---
+6.1.6 Hàm Rabin: x² mod n
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+11
+•
+f(x) = x² mod n, n = p·q (p, q ≡ 3 mod 4)
+•
+Đảo f ⇔tìm căn bậc hai modulo n ⇔phân tích n 
+(chứng minh được!)
+•
+Có cửa sập p, q: tìm căn mod p và mod q, ghép bằng 
+CRT → 4 căn
+–
+căn mod p: ±y(p+1)/4 mod p
+•
+Nhận xét: biết hai căn x₁ ≢±x₂ ⇒gcd(x₁ − x₂, n) cho ra 
+p hoặc q
+Ví dụ n = 77 = 7·11, x = 20
+y = 20² mod 77 = 400 − 385 = 15
+mod 7: 15 ≡ 1 → căn ±1
+mod 11: 15 ≡ 4 → căn ±2
+CRT → x ∈{13, 20, 57, 64}
+gcd(20 − 13, 77) = 7
+
+--- PAGE 12 ---
+6.1.7 Hàm một chiều và cửa sập trong thực tế
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+12
+Hàm một chiều (VD: SHA-256)
+Hàm có cửa sập (VD: RSA)
+Ưu điểm
+Nhanh, đầu ra cố định, hiệu ứng tuyết lở, không cần 
+khóa
+Cho phép mã hóa bất đối xứng, chữ ký số, trao khóa
+Hạn chế
+Đầu vào ngắn/đoán được → vét cạn; cần salt; va 
+chạm tồn tại
+Chậm, khóa lớn, dễ sai khi triển khai, phụ thuộc giả 
+thiết toán học
+Ứng dụng
+Mật khẩu, toàn vẹn, PoW, sinh số giả ngẫu nhiên, 
+cam kết
+TLS, email an toàn, chứng chỉ, ví tiền mã hóa
+Vét cạn mật khẩu: "hello" chỉ là 1 trong ~1,2·10⁷ chuỗi 5 
+chữ thường → thử hết trong < 1 giây
+Máy tính lượng tử: Shor phá được cửa sập RSA/DLP; hàm 
+băm chỉ bị Grover giảm một nửa độ an toàn
+
+--- PAGE 13 ---
+Bài tập thực hành 6.1 – Hàm một chiều
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+13
+✓1.1 Tính 3⁵ mod 17 bằng lũy thừa nhanh; tìm k sao cho 3ᵏ≡ 7 (mod 
+17)
+✓1.2 Hàm f(x) = x mod 100 có phải hàm một chiều không? Vì sao?
+✓1.3 Với n = 77, tìm cả 4 căn bậc hai của 58 (mod 77)
+✓1.4 Giải thích vì sao "biết d của RSA" tương đương với có cửa sập
+✎
+Cách làm
+•
+Làm cá nhân 10–15 phút
+•
+Trình bày từng bước, không 
+chỉ ghi đáp số
+•
+Đối chiếu kết quả với bạn 
+bên cạnh
+
+--- PAGE 14 ---
+Phần 6.2. Hàm băm mật mã
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+14
+• Hàm băm "nén" thông điệp bất kỳ 
+thành dấu vân tay ngắn, cố định –
+thay đổi 1 bit đầu vào, đầu ra thay 
+đổi hoàn toàn.
+M bất kỳ  →  H(M) 256 bit
+
+--- PAGE 15 ---
+6.2.1 Định nghĩa hàm băm mật mã
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+15
+Thông điệp M
+độ dài bất kỳ
+H(·)
+Giá trị băm h = H(M)
+độ dài cố định n bit (message digest)
+Đầu vào
+SHA-256 (hex, 64 ký tự = 256 bit)
+"hello"
+2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+"hell0"
+bdeddd433637173928fe7202b663157c9e1881c3e4da1d45e8fff8fb944a4868
+•
+Yêu cầu cơ bản: áp dụng cho mọi độ dài; đầu ra cố định; tính nhanh; tất định (cùng M → cùng h)
+•
+Hiệu ứng tuyết lở: chỉ đổi "o" → "0" nhưng 139/256 bit đầu ra bị đổi (≈ 50%)
+•
+Hàm băm không có khóa và không phải mã hóa: không thể "giải băm"
+
+--- PAGE 16 ---
+6.2.2 Ba tính chất an toàn của hàm băm
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+16
+Kháng tiền ảnh
+(one-way)
+Cho h, khó tìm M với H(M) = h
+≈ 2ⁿ phép thử
+Kháng tiền ảnh thứ hai
+(va chạm yếu)
+Cho M, khó tìm M′ ≠ M với H(M′) = 
+H(M)
+≈ 2ⁿ phép thử
+Kháng va chạm
+(va chạm mạnh)
+Khó tìm BẤT KỲ cặp M ≠ M′ với 
+H(M) = H(M′)
+≈ 2ⁿ/² (ngày sinh)
+•
+Kháng va chạm ⇒kháng tiền ảnh thứ hai; va chạm luôn tồn tại (vô hạn đầu vào, hữu hạn đầu ra) nhưng phải khó 
+tìm
+•
+Với n = 256: tiền ảnh ~2²⁵⁶, va chạm ~2¹²⁸ → an toàn 128 bit
+
+--- PAGE 17 ---
+6.2.3 Phân loại hàm băm và HMAC
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+17
+Hàm băm
+Không khóa
+Có khóa
+MDC
+MAC
+OWHF
+CRHF
+MDC: phát hiện sửa đổi (dùng kèm chữ ký số); MAC: toàn vẹn + 
+xác thực nguồn bằng khóa chung
+HMAC (RFC 2104, FIPS 198-1)
+HMAC(K, m) = H( (K ⊕opad) ‖
+H( (K ⊕ipad) ‖ m ) )
+ipad = 0x36…36, opad = 0x5C…5C
+Không dùng H(K ‖ m) → tấn công mở rộng độ dài
+Ví dụ HMAC-SHA256(K = "key", m = "The quick brown fox 
+jumps over the lazy dog"):
+f7bc83f4 30538424 b13298e6 aa6fb143
+ef4d59a1 49461759 97479dbc 2d1a3cd8
+
+--- PAGE 18 ---
+6.2.4 Nghịch lý ngày sinh
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+18
+•
+Câu hỏi: nhóm k người, xác suất có ít nhất hai người 
+trùng ngày sinh?
+•
+P(k) = 1 − (365/365)(364/365)…((365 − k + 1)/365)
+•
+Tổng quát với N giá trị: P ≈ 1 − e−k²/(2N)
+•
+P = 50% khi k ≈ 1,1774·√N
+•
+Hệ quả: hàm băm n bit bị tìm va chạm sau ≈ 2ⁿ/² lần 
+băm
+Số người k
+P(trùng)
+10
+11,7%
+20
+41,1%
+23
+50,7%
+30
+70,6%
+41
+90,3%
+57
+99,0%
+70
+99,9%
+23
+người là đủ 50%
+√365 ≈ 19
+cùng bậc với 23
+
+--- PAGE 19 ---
+6.2.5 Tấn công ngày sinh lên chữ ký số
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+19
+1
+Soạn 2ⁿ/² biến thể hợp đồng HỢP LỆ (đổi dấu cách, từ 
+đồng nghĩa)
+2
+Soạn 2ⁿ/² biến thể hợp đồng GIAN LẬN
+3
+Tìm cặp (M₁, M₂) có H(M₁) = H(M₂)
+4
+Đưa M₁ cho nạn nhân ký → chữ ký dùng được cho M₂
+n (bit)
+Va chạm ≈ 2ⁿ/²
+Đánh giá
+64
+2³² ≈ 4·10⁹
+Vài giây
+128 (MD5)
+2⁶⁴
+Khả thi (và đã bị phá)
+160 (SHA-1)
+2⁸⁰
+Đã phá thực tế 
+(2017)
+256 (SHA-256)
+2¹²⁸
+An toàn
+Kết luận: độ dài băm cho chữ ký phải ≥ 256 bit; bên ký nên sửa nhỏ văn bản trước khi ký
+
+--- PAGE 20 ---
+6.2.6 Cấu trúc Merkle–Damgård
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+20
+IV
+M₁
+f
+M₂
+f
+Mₗ (+ đệm, độ dài)
+f
+…
+H(M)
+CV₁
+•
+Hàm nén f: (CVᵢ₋₁, Mᵢ) → CVᵢ, khối cố định (512 bit với MD5, SHA-1, SHA-256)
+•
+Đệm: thêm bit 1, các bit 0, rồi độ dài 64 bit → độ dài bội của 512 (đệm "MD-strengthening")
+•
+Định lý: f kháng va chạm ⇒H kháng va chạm → chỉ cần thiết kế tốt hàm nén
+•
+Dùng trong MD5, SHA-1, SHA-2; SHA-3 dùng cấu trúc bọt biển (sponge) khác
+
+--- PAGE 21 ---
+6.2.7 Ví dụ đệm SHA-256 cho "abc"
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+21
+Byte
+Nội dung (16 byte mỗi hàng)
+00–15
+61 62 63 80 00 00 00 00 00 00 00 00 00 00 00 00
+16–31
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+32–47
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+48–63
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 18
+•
+"abc" = 61 62 63 (24 bit)
+•
+Thêm bit 1 → byte 80
+•
+Thêm 423 bit 0 để độ dài ≡ 448 (mod 512)
+•
+64 bit cuối: độ dài = 24 = 0x18
+•
+Tổng: đúng 1 khối 512 bit
+Kết quả
+SHA-256("abc") =
+ba7816bf 8f01cfea 414140de 5dae2223
+b00361a3 96177a9c b410ff61 f20015ad
+
+--- PAGE 22 ---
+6.2.8 Tấn công mở rộng độ dài
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+22
+•
+Với Merkle–Damgård, H(M) chính là trạng thái trong sau 
+khi xử lý M
+•
+MAC ngây thơ: tag = H(K ‖ m). Kẻ tấn công biết m, tag, độ 
+dài K (không biết K)
+•
+Lấy tag làm CV, băm tiếp m′ ⇒tính được
+–
+H(K ‖ m ‖ pad ‖ m′)
+•
+⇒giả mạo MAC cho thông điệp dài hơn, ví dụ nối thêm 
+"&amount=1000000"
+•
+Phòng chống: HMAC, SHA-3, hoặc SHA-512/256 (cắt 
+ngắn)
+K ‖ m ‖ pad
+tag = H(K ‖ m)
+f(tag, m′ ‖ pad′)
+tag′ hợp lệ!
+
+--- PAGE 23 ---
+6.2.9 MD5 và SHA-1
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+23
+MD5 (Rivest, 1992)
+•
+Băm 128 bit, khối 512 bit, 4 vòng × 16 bước
+•
+IV: A = 67452301, B = EFCDAB89, C = 98BADCFE, D 
+= 10325476
+•
+Bước: A ← B + ((A + F(B,C,D) + X[k] + T[i]) ⋘s)
+•
+T[i] = ⌊2³² · |sin i|⌋
+Đã bị phá: Wang et al. (2004) tìm va chạm; mã độc 
+Flame (2012) giả chữ ký Microsoft
+SHA-1 (NIST, 1995)
+•
+Băm 160 bit, khối 512 bit, 80 bước
+•
+IV thêm E = C3D2E1F0; Kₜ = 5A827999, 6ED9EBA1, 
+8F1BBCDC, CA62C1D6
+•
+Bước: A ← E + f(t,B,C,D) + (A ⋘5) + Wₜ + Kₜ;  C ← B 
+⋘30
+•
+Wₜ = (Wₜ₋₃ ⊕Wₜ₋₈ ⊕Wₜ₋₁₄ ⊕Wₜ₋₁₆) ⋘1
+Đã bị phá: SHAttered (2017) – hai PDF cùng SHA-1; va 
+chạm tiền tố chọn (2020); NIST loại bỏ SHA-1 trước 
+2030
+
+--- PAGE 24 ---
+6.2.10 Họ SHA-2, SHA-3 và so sánh
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+24
+Hàm
+Đầu ra
+Khối
+Số vòng
+Cấu trúc
+Hiện trạng
+MD5
+128
+512
+64
+Merkle–Damgård
+Đã phá
+SHA-1
+160
+512
+80
+Merkle–Damgård
+Đã phá
+SHA-256
+256
+512
+64
+Merkle–Damgård
+An toàn
+SHA-512
+512
+1024
+80
+Merkle–Damgård
+An toàn
+SHA3-256
+256
+1088 (rate)
+24
+Bọt biển (Keccak)
+An toàn
+•
+SHA-2 (FIPS 180-4): SHA-224/256/384/512 – dùng rộng rãi nhất hiện nay (TLS, Bitcoin)
+•
+SHA-3 (FIPS 202, 2015): Keccak, cấu trúc bọt biển – miễn nhiễm tấn công mở rộng độ dài; dự phòng khi SHA-2 
+gặp sự cố
+
+--- PAGE 25 ---
+6.2.11 Bên trong SHA-256: hàm nén
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+25
+•
+Trạng thái: 8 từ 32 bit a, b, c, d, e, f, g, h (khởi tạo từ phần lẻ 
+căn bậc hai của 8 số nguyên tố đầu)
+•
+Lịch từ: W₀…W₁₅ lấy từ khối 512 bit; Wₜ = σ₁(Wₜ₋₂) + Wₜ₋₇ + 
+σ₀(Wₜ₋₁₅) + Wₜ₋₁₆ (t = 16…63)
+•
+64 vòng, mỗi vòng dùng hằng số Kₜ (phần lẻ căn bậc ba của 
+64 số nguyên tố đầu)
+•
+Cuối khối: cộng trạng thái mới vào trạng thái cũ (mod 2³²) –
+kiểu Davies–Meyer
+Một vòng
+T₁ = h + Σ₁(e) + Ch(e,f,g) + Kₜ + Wₜ
+T₂ = Σ₀(a) + Maj(a,b,c)
+h←g, g←f, f←e, e←d + T₁
+d←c, c←b, b←a, a←T₁ + T₂
+Ch(e,f,g) = (e∧f) ⊕(¬e∧g)
+Maj(a,b,c) = (a∧b)⊕(a∧c)⊕(b∧c)
+Σ₀(a) = ROTR²⊕ROTR¹³⊕ROTR²²
+
+--- PAGE 26 ---
+6.2.12 Ví dụ: băm "abc" và "abd"
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+26
+Hàm
+"abc"
+MD5
+900150983cd24fb0d6963f7d28e17f72
+SHA-1
+a9993e364706816aba3e25717850c26c9cd0d89d
+SHA-256
+ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+SHA3-256
+3a985da74fe225b2045c172d6bd390bd855f086e3e9d525b46bfe24511431532
+SHA-256
+Giá trị băm
+"abc"
+ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+"abd"
+a52d159f262b2c6ddb724a61840befc36eb30c88877a4030b65cbe86298449c9
+"abc" → "abd" (khác 3 bit ở đầu vào) ⇒122/256 bit của SHA-256 thay đổi – không thể đoán quan hệ giữa hai đầu ra
+
+--- PAGE 27 ---
+6.2.13 Ứng dụng của hàm băm
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+27
+Lưu mật khẩu
+Lưu H(salt ‖ mật khẩu), dùng hàm chậm: Argon2, bcrypt, 
+PBKDF2
+SHA-256("123456") = 8d969eef… nằm sẵn trong bảng tra
+Toàn vẹn tệp
+Công bố SHA-256 của bộ cài; người tải so sánh lại
+Chữ ký số
+Ký H(M) thay vì M: nhanh, cố định độ dài, chống giả mạo
+Blockchain / PoW
+Tìm nonce để SHA-256 bắt đầu bằng nhiều số 0
+VD: "COM608-36217" → 0000e3e0…
+
+--- PAGE 28 ---
+Bài tập thực hành 6.2 – Hàm băm
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+28
+✓2.1 Với hàm băm 32 bit, cần băm khoảng bao nhiêu thông điệp để 
+xác suất va chạm ≈ 50%?
+✓2.2 Đệm SHA-256 cho "hello": có bao nhiêu bit 0 được thêm? 64 
+bit cuối bằng bao nhiêu?
+✓2.3 Vì sao lưu SHA-256(mật khẩu) không có salt là nguy hiểm?
+✓2.4 Giải thích vì sao HMAC không bị tấn công mở rộng độ dài
+✎
+Cách làm
+•
+Làm cá nhân 10–15 phút
+•
+Trình bày từng bước, không 
+chỉ ghi đáp số
+•
+Đối chiếu kết quả với bạn 
+bên cạnh
+
+--- PAGE 29 ---
+Phần 6.3. Khóa công khai, DH và ElGamal
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+29
+• Hai người lạ có thể tạo khóa bí mật 
+chung qua kênh công khai – nhờ độ 
+khó của bài toán logarit rời rạc.
+a (Alice)
+g công khai
+b (Bob)
+gᵃ(gửi công khai)
+gᵇ(gửi công khai)
+gᵃᵇchung
+
+--- PAGE 30 ---
+6.3.1 Mật mã khóa công khai
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+30
+1976
+Diffie – Hellman: "New Directions in 
+Cryptography"
+1977
+RSA
+1985
+ElGamal; Koblitz – Miller: mật mã đường cong 
+elliptic
+•
+Hai khóa: công khai (mã hóa / xác minh) và bí mật (giải 
+mã / ký)
+•
+Không cần kênh an toàn để trao khóa
+•
+Nền tảng: hàm một chiều có cửa sập
+Ưu điểm
+Nhược điểm
+Không cần trao khóa bí mật 
+trước
+Chậm hơn mã đối xứng
+Dễ mở rộng cho nhiều người 
+dùng
+Khóa dài hơn (2048 bit…)
+Hỗ trợ chữ ký số, chống chối bỏ
+Cần PKI để xác thực khóa
+Tích hợp PKI, CA, TLS, email
+Lộ khóa bí mật là mất tất cả
+Ứng dụng: trao khóa (DH), mã hóa (RSA, ElGamal), chữ ký (RSA, 
+DSA, ECDSA)
+
+--- PAGE 31 ---
+6.3.2 Căn nguyên thủy và logarit rời rạc
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+31
+•
+Căn nguyên thủy g mod p: g, g², …, gᵖ⁻¹ tạo ra mọi phần tử 1 
+… p − 1
+•
+DLP: cho p, g, y = gˣ mod p, tìm x = log_g y
+•
+CDH: biết gᵃ, gᵇ→ tính gᵃᵇ;  DDH: phân biệt gᵃᵇvới số ngẫu 
+nhiên
+•
+Thuật toán tấn công: baby-step giant-step (~√p), Pohlig–
+Hellman (khi p − 1 chỉ có ước nhỏ), index calculus
+•
+⇒Chọn p ≥ 2048 bit, p − 1 có ước nguyên tố lớn
+k
+1
+2
+3
+4
+5
+6
+3ᵏ mod 7
+3
+2
+6
+4
+5
+1
+2ᵏ mod 7
+2
+4
+1
+2
+4
+1
+3 là căn nguyên thủy mod 7 (sinh đủ 1…6)
+2 thì không: chỉ sinh {2, 4, 1} (bậc 3)
+Kiểm tra nhanh: g là căn nguyên thủy ⇔g(p−1)/q ≢1 với 
+mọi ước nguyên tố q của p − 1
+p = 7: p − 1 = 6 = 2·3; 3³ = 6 ≢1, 3² = 2 ≢1 ✓
+
+--- PAGE 32 ---
+6.3.3 Giải DLP: baby-step giant-step
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+32
+•
+Tìm x với gˣ ≡ y (mod p); đặt m = ⌈√(p − 1)⌉, viết x = i·m + j
+•
+Baby steps: lưu bảng gʲ, j = 0 … m − 1
+•
+Giant steps: tính y·(g⁻ᵐ)ⁱ, i = 0, 1, … cho đến khi trùng 
+bảng
+•
+Chi phí ≈ √p thời gian và bộ nhớ → p 2048 bit vẫn cần 
+~2¹⁰²⁴ bước
+•
+Ví dụ: 3ˣ ≡ 7 (mod 17), m = 5
+j
+0
+1
+2
+3
+4
+3ʲ mod 17
+1
+3
+9
+10
+13
+3⁵ = 243 ≡ 5;  5⁻¹ ≡ 7 (mod 17)
+i = 0: 7          → không có
+i = 1: 7·7 = 49 ≡ 15 → không có
+i = 2: 15·7 = 105 ≡ 3 → j = 1 ✓
+x = 2·5 + 1 = 11
+Kiểm tra: 3¹¹ ≡ 7 (mod 17) ✓
+
+--- PAGE 33 ---
+6.3.4 Giao thức trao khóa Diffie–Hellman
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+33
+Công khai: số nguyên tố p, căn nguyên thủy g
+Alice
+Bob
+chọn bí mật a
+A = gᵃmod p
+chọn bí mật b
+B = gᵇmod p
+A
+B
+K = Bᵃmod p
+K = Aᵇmod p
+Bᵃ= gᵃᵇ= Aᵇ⇒cùng khóa K
+•
+Eve thấy p, g, A, B nhưng cần giải CDH để có gᵃᵇ
+•
+K thường được đưa qua hàm băm/KDF để làm khóa AES; DH không tự xác thực hai bên
+
+--- PAGE 34 ---
+6.3.5 Ví dụ trao khóa Diffie–Hellman
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+34
+Bước
+Ví dụ 1 (nhóm 2)
+Ví dụ 2
+Tham số công khai
+p = 7, g = 3
+p = 23, g = 5
+Bí mật
+a = 5, b = 9
+a = 6, b = 15
+A = gᵃmod p
+3⁵ = 243 ≡ 5
+5⁶ = 15625 ≡ 8
+B = gᵇmod p
+3⁹ ≡ 3³ = 27 ≡ 6
+5¹⁵ ≡ 19
+Alice: Bᵃmod p
+6⁵ ≡ (−1)⁵ ≡ 6
+19⁶ ≡ 2
+Bob: Aᵇmod p
+5⁹ ≡ 5³ = 125 ≡ 6
+8¹⁵ ≡ 2
+Khóa chung K
+6
+2
+•
+Mẹo: rút gọn số mũ theo mod (p − 1) 
+(Fermat): 3⁹ ≡ 3⁹ ᵐᵒᵈ⁶ = 3³
+•
+6 ≡ −1 (mod 7) ⇒6⁵ ≡ −1
+•
+Nhận xét: p = 7 quá nhỏ – Eve thử 6 
+giá trị là tìm ra a
+•
+Thực tế: p ≥ 2048 bit hoặc ECDH 
+(X25519)
+
+--- PAGE 35 ---
+6.3.6 Tấn công người đứng giữa (MITM) lên DH
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+35
+Alice
+Mallory
+Bob
+gᵃ
+gᵐ
+gᵐ
+gᵇ
+K₁ = gᵃᵐ(Alice 
+Mallory)
+K₂ = gᵇᵐ(Mallory 
+Bob)
+•
+Mallory giải mã – đọc – mã hóa lại mọi thông điệp; hai bên không phát hiện được
+•
+Khắc phục: DH có xác thực – ký gᵃ, gᵇbằng khóa bí mật có chứng chỉ (Station-to-Station, TLS 1.3)
+•
+Dùng khóa DH tạm thời (ephemeral) mỗi phiên ⇒bí mật chuyển tiếp (forward secrecy)
+
+--- PAGE 36 ---
+6.3.7 Hệ mã hóa ElGamal (1985)
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+36
+Sinh khóa (Bob)
+Chọn p, căn nguyên thủy α
+Bí mật a ∈[1, p − 2]
+β = αᵃmod p
+Công khai (p, α, β)
+Mã hóa (Alice)
+Chọn k ngẫu nhiên, MỚI mỗi lần
+r = αᵏmod p
+t = βᵏ· m mod p
+Gửi (r, t)
+Giải mã (Bob)
+m = t · r⁻ᵃmod p
+(r⁻ᵃ= (rᵃ)⁻¹ mod p)
+Vì sao đúng: t · r⁻ᵃ≡ βᵏm (αᵏ)⁻ᵃ≡ (αᵃ)ᵏm α⁻ᵃᵏ≡ m (mod p)
+An toàn dựa trên CDH/DDH: βᵏ= αᵃᵏđóng vai "khóa DH dùng một lần" che m
+
+--- PAGE 37 ---
+6.3.8 Ví dụ ElGamal: p = 467, α = 2, a = 127
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+37
+Bước
+Phép tính
+Kết quả
+Khóa công khai
+β = 2¹²⁷ mod 467
+132
+Mã hóa m = 100, k = 53
+r = 2⁵³ mod 467
+399
+t = 132⁵³ · 100 mod 467
+308
+Giải mã
+rᵃ= 399¹²⁷ mod 467
+358
+(rᵃ)⁻¹ mod 467
+437
+m = 308 · 437 mod 467
+100 ✓
+Lưu ý hiệu chỉnh
+Slide nhóm 2 ghi β = 323, r = 121, t = 56 
+– không khớp với p = 467, α = 2, a = 127, 
+k = 53
+Giá trị đúng (kiểm tra bằng máy): β = 
+132, r = 399, t = 308
+2 là căn nguyên thủy mod 467 (467 ≡ 3 
+mod 8)
+Bản mã (399, 308) dài gấp đôi bản rõ; mã lại m = 100 với k khác cho bản mã khác
+
+--- PAGE 38 ---
+6.3.9 Tính chất và rủi ro của ElGamal
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+38
+•
+Xác suất: cùng m, k khác → bản mã khác (an toàn ngữ 
+nghĩa dưới DDH)
+•
+Mở rộng bản mã: (r, t) dài gấp đôi m
+•
+Đồng cấu nhân: (r₁r₂, t₁t₂) là bản mã của m₁m₂ → dễ bị 
+sửa đổi (malleable)
+•
+Chỉ bảo mật, không bảo đảm toàn vẹn hay xác thực
+•
+Tuyệt đối không dùng lại k
+Tấn công khi dùng lại k
+Cùng k ⇒cùng βᵏ:
+t₁ = βᵏ·m₁,  t₂ = βᵏ·m₂
+⇒m₂ = t₂ · t₁⁻¹ · m₁ (mod p)
+VD: m₁ = 100 (đã biết), t₁ = 308
+t₂ = 303
+m₂ = 303 · 308⁻¹ · 100 ≡ 250
+
+--- PAGE 39 ---
+6.3.10 Giới thiệu mật mã đường cong elliptic
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+39
+•
+Đường cong E: y² = x³ + ax + b trên 𝔽ₚ; các điểm cùng điểm vô 
+cực O tạo thành nhóm
+•
+Cộng điểm: λ = (y₂ − y₁)/(x₂ − x₁); nhân đôi: λ = (3x₁² + a)/(2y₁)
+–
+x₃ = λ² − x₁ − x₂,  y₃ = λ(x₁ − x₃) − y₁
+•
+ECDLP: biết P và Q = kP, tìm k – khó hơn DLP thường
+•
+→ Khóa 256 bit ECC ≈ 3072 bit RSA/DH
+•
+Ứng dụng: ECDH (X25519), ECDSA, Ed25519
+Ví dụ: y² = x³ + 2x + 2 (mod 17), P = (5, 1)
+2P: λ = (3·25 + 2)·(2·1)⁻¹
+= 77 · 9 ≡ 13 (mod 17)
+x₃ = 169 − 10 = 159 ≡ 6
+y₃ = 13(5 − 6) − 1 = −14 ≡ 3
+⇒2P = (6, 3)
+Kiểm tra: 3² = 9; 6³ + 12 + 2 = 230 ≡ 9 ✓
+
+--- PAGE 40 ---
+6.3.11 So sánh các hệ khóa công khai
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+40
+Hệ
+Bài toán khó
+Chức năng
+Khóa cho 128 bit an toàn
+RSA
+Phân tích thừa số
+Mã hóa, chữ ký
+3072 bit
+Diffie–Hellman
+CDH / DLP
+Trao khóa
+p: 3072 bit
+ElGamal
+DDH / DLP
+Mã hóa, chữ ký
+p: 3072 bit
+ECC (ECDH, ECDSA)
+ECDLP
+Trao khóa, chữ ký
+256 bit
+ML-KEM, ML-DSA
+Lưới (lattice)
+Hậu lượng tử
+FIPS 203/204 (2024)
+Thuật toán Shor phá được cả RSA, DH, ElGamal và ECC trên máy tính lượng tử đủ lớn → chuyển dần sang mật mã hậu 
+lượng tử
+
+--- PAGE 41 ---
+Bài tập thực hành 6.3 – DH và ElGamal
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+41
+✓3.1 DH với p = 23, g = 5, a = 4, b = 3: tính A, B và khóa chung K
+✓3.2 2 có phải căn nguyên thủy modulo 11 không?
+✓3.3 ElGamal p = 23, α = 5, a = 6: tính β; mã hóa m = 10 với k = 3 rồi 
+giải mã
+✓3.4 Trên đường cong ở mục 3.10, tính 3P = P + 2P
+✎
+Cách làm
+•
+Làm cá nhân 10–15 phút
+•
+Trình bày từng bước, không 
+chỉ ghi đáp số
+•
+Đối chiếu kết quả với bạn 
+bên cạnh
+
+--- PAGE 42 ---
+Phần 6.4. Chữ ký số và hạ tầng khóa công khai
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+42
+• Chữ ký số gắn danh tính với nội 
+dung: ai cũng kiểm tra được, chỉ 
+người giữ khóa bí mật tạo được.
+
+--- PAGE 43 ---
+6.4.1 Chữ ký số là gì?
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+43
+Tiêu chí
+Chữ ký tay
+Chữ ký số
+Gắn với
+Người ký
+Người ký + nội dung văn bản
+Sao chép
+Có thể bắt chước
+Không giả được khi không có 
+khóa
+Kiểm tra
+So mắt, giám định
+Thuật toán với khóa công khai
+Sửa văn bản sau ký
+Khó phát hiện
+Chữ ký mất hiệu lực ngay
+Xác thực
+đúng người ký
+Toàn vẹn
+không bị sửa
+Chống chối bỏ
+không thể phủ nhận
+•
+Định nghĩa: cặp thuật toán (Ký với khóa bí mật, Xác minh với khóa công khai) sao cho không ai khác tạo được chữ ký hợp 
+lệ cho thông điệp mới
+•
+Tại Việt Nam, Luật Giao dịch điện tử 2023 công nhận giá trị pháp lý của chữ ký số
+
+--- PAGE 44 ---
+6.4.2 Mô hình "băm rồi ký"
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+44
+Người gửi (Alice)
+Văn bản M
+H(M)
+Ký bằng khóa bí mật
+Gửi (M, s)
+Người nhận (Bob)
+Nhận (M, s)
+Tính H(M)
+Xác minh s bằng khóa 
+công khai
+Hợp lệ / Không
+•
+Vì sao băm trước? Văn bản dài → chữ ký dài và chậm; băm cho độ dài cố định, nhanh
+•
+Băm còn chống giả mạo tồn tại (tạo s trước rồi suy ra m) và tấn công đồng cấu
+•
+Yêu cầu: H phải kháng va chạm – nếu H(M₁) = H(M₂) thì chữ ký của M₁ cũng hợp lệ cho M₂
+
+--- PAGE 45 ---
+6.4.3 Chữ ký RSA
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+45
+•
+Ký: s = H(m)ᵈmod n
+•
+Xác minh: sᵉmod n ≟H(m)
+•
+Đúng vì: (hᵈ)ᵉ= hᵉᵈ≡ h (mod n)
+•
+Giả mạo tồn tại nếu ký trực tiếp m (không băm): 
+chọn s bất kỳ, đặt m = sᵉ⇒(m, s) hợp lệ
+–
+n = 33, e = 3: chọn s = 5 ⇒m = 125 mod 33 = 26
+•
+Thực tế: RSA-PSS (đệm ngẫu nhiên, RFC 8017)
+Ví dụ (nhóm 1): p = 3, q = 11
+n = 33, φ(n) = 20
+e = 3, d = 7 (3·7 = 21 ≡ 1)
+h = H(m) = 4 (giả định)
+s = 4⁷ = 16384 ≡ 16 (mod 33)
+Xác minh: 16³ = 4096
+≡ 4 = h ✓
+
+--- PAGE 46 ---
+6.4.4 Lược đồ chữ ký ElGamal
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+46
+Khóa
+p, căn nguyên thủy α
+bí mật a, β = αᵃmod p
+công khai (p, α, β)
+Ký m
+k ngẫu nhiên, gcd(k, p − 1) = 1
+r = αᵏmod p
+s = k⁻¹(m − a·r) mod (p − 1)
+chữ ký (r, s)
+Xác minh
+kiểm tra 0 < r < p
+v₁ = βʳ · rˢ mod p
+v₂ = αᵐmod p
+hợp lệ ⇔v₁ = v₂
+Chứng minh: s·k ≡ m − a·r (mod p − 1) ⇒m ≡ a·r + k·s ⇒αᵐ≡ (αᵃ)ʳ(αᵏ)ˢ = βʳ rˢ (mod p)
+Lưu ý: nghịch đảo k⁻¹ và phép trừ lấy theo mod (p − 1), còn lũy thừa lấy theo mod p
+
+--- PAGE 47 ---
+6.4.5 Ví dụ chữ ký ElGamal
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+47
+Bước
+Phép tính
+Kết quả
+Khóa
+p = 467, α = 2, a = 127, β = 2¹²⁷ mod 467
+132
+Chọn k
+k = 213, gcd(213, 466) = 1
+–
+r
+2²¹³ mod 467
+29
+k⁻¹
+213⁻¹ mod 466
+431
+s
+431·(100 − 127·29) mod 466
+51
+v₁
+132²⁹ · 29⁵¹ mod 467
+189
+v₂
+2¹⁰⁰ mod 467
+189 ✓
+Chữ ký của m = 100
+(r, s) = (29, 51)
+Hiệu chỉnh nhóm 1: ví dụ cũ trộn hai 
+bộ tham số (p = 2579 và p = 467) 
+nên v₁ ≠ v₂
+
+--- PAGE 48 ---
+6.4.6 Thuật toán chữ ký số DSA
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+48
+•
+Tham số: q nguyên tố (256 bit), p nguyên tố với q | p − 1, g = 
+h(p−1)/q mod p (bậc q)
+•
+Khóa: bí mật x ∈(0, q); công khai y = gˣ mod p
+•
+Ký: k ngẫu nhiên ∈(0, q)
+–
+r = (gᵏmod p) mod q
+–
+s = k⁻¹(H(m) + x·r) mod q
+•
+Xác minh: w = s⁻¹, u₁ = H·w, u₂ = r·w (mod q)
+–
+v = (gu₁ · yu₂ mod p) mod q ≟r
+So với ElGamal
+•
+Tính toán trong nhóm con bậc q → chữ ký chỉ 2 
+× 256 bit
+•
+Dấu "+" thay cho "−"
+Lịch sử
+•
+NIST đề xuất 1991, chuẩn FIPS 186 (1994)
+•
+FIPS 186-5 (2023): không còn dùng DSA để 
+tạo chữ ký mới; thay bằng ECDSA, EdDSA
+
+--- PAGE 49 ---
+6.4.7 Ví dụ DSA với số nhỏ
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+49
+•
+p = 607, q = 101 (606 = 6·101), g = 2⁶ mod 607 = 64;  x = 17, y = 64¹⁷ mod 607 = 420
+Ký H(m) = 41, k = 23
+Kết quả
+gᵏmod p = 64²³ mod 607
+204
+r = 204 mod 101
+2
+k⁻¹ mod 101 (23·22 = 506 ≡ 1)
+22
+s = 22·(41 + 17·2) mod 101
+34
+Xác minh (r, s) = (2, 34)
+Kết quả
+w = 34⁻¹ mod 101
+3
+u₁ = 41·3 mod 101
+22
+u₂ = 2·3 mod 101
+6
+g²² · y⁶ mod 607 = 117·64
+204
+v = 204 mod 101
+2 = r ✓
+Chữ ký chỉ gồm hai số modulo q (nhỏ), dù p lớn
+
+--- PAGE 50 ---
+6.4.8 Thảm họa khi dùng lại số ngẫu nhiên k
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+50
+•
+Hai chữ ký cùng k ⇒cùng r:
+–
+s₁ = k⁻¹(H₁ + xr),  s₂ = k⁻¹(H₂ + xr)
+•
+⇒k = (H₁ − H₂)(s₁ − s₂)⁻¹ mod q
+•
+⇒x = (s₁k − H₁)·r⁻¹ mod q → lộ khóa bí mật!
+•
+Sự cố thật: Sony PS3 (2010) dùng k cố định trong ECDSA; 
+ví Bitcoin Android (2013) do bộ sinh số ngẫu nhiên lỗi
+•
+Phòng chống: k tất định từ (x, m) theo RFC 6979, hoặc 
+EdDSA
+Ví dụ(tham số mục 4.7, k = 23)
+H₁ = 41 → (r, s₁) = (2, 34)
+H₂ = 77 → (r, s₂) = (2, 18)
+k = (41 − 77)·(34 − 18)⁻¹
+= −36·16⁻¹ ≡ 23 (mod 101)
+x = (34·23 − 41)·2⁻¹
+≡ 17 (mod 101)  ← khóa bí mật
+
+--- PAGE 51 ---
+6.4.9 Schnorr, EdDSA và chữ ký hậu lượng tử
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+51
+Chữ ký Schnorr (1989)
+R = gᵏ mod p
+e = H(R ‖ m)
+s = k + x·e mod q
+Xác minh: gˢ ≟R · yᵉ (mod p)
+VD (tham số 4.7): k = 31, R = 223, giả sử e = 29:
+s = 31 + 17·29 ≡ 19; g¹⁹ = 82 = 223·420²⁹
+mod 607 ✓
+•
+Schnorr: đơn giản, chứng minh an toàn được; nền tảng 
+của EdDSA và chữ ký Taproot của Bitcoin
+•
+EdDSA (Ed25519): đường cong Edwards, k tất định từ 
+khóa và thông điệp → không lộ khóa do k
+•
+ECDSA: DSA trên đường cong elliptic – dùng trong TLS, 
+Bitcoin, Ethereum
+•
+Hậu lượng tử: ML-DSA (FIPS 204, lưới) và SLH-DSA 
+(FIPS 205, dựa trên hàm băm) – 2024
+
+--- PAGE 52 ---
+6.4.10 Hạ tầng khóa công khai (PKI) và chứng chỉ số
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+52
+Root CA
+tự ký, cài sẵn trong hệ điều hành / trình duyệt
+CA trung gian
+được Root CA ký
+Chứng chỉ người dùng / máy chủ
+được CA trung gian ký
+Xác minh chuỗi tin cậy từ dưới lên gốc
+•
+Vấn đề: khóa công khai này có thật của Bob không? 
+(chống MITM)
+•
+Chứng chỉ X.509: tên chủ thể, khóa công khai, thời hạn, 
+tên CA, chữ ký của CA
+•
+Thu hồi: CRL, OCSP khi khóa bị lộ
+•
+Ứng dụng: HTTPS, chữ ký số USB token/HSM cho doanh 
+nghiệp, hóa đơn điện tử, khai thuế, ký mã nguồn
+•
+Rủi ro: mất khóa bí mật, CA bị xâm nhập (DigiNotar 2011)
+
+--- PAGE 53 ---
+6.4.11 So sánh các lược đồ chữ ký số
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+53
+Lược đồ
+Bài toán khó
+Khóa công khai
+Chữ ký
+Ghi chú
+RSA-PSS (3072)
+Phân tích thừa số
+384 byte
+384 byte
+Xác minh rất nhanh
+DSA
+DLP
+~384 byte
+64 byte
+Không dùng cho chữ ký mới
+ECDSA P-256
+ECDLP
+64 byte
+64 byte
+Cần k ngẫu nhiên tốt
+Ed25519
+ECDLP
+32 byte
+64 byte
+k tất định, nhanh
+ML-DSA-44
+Lưới (MLWE)
+1312 byte
+2420 byte
+Hậu lượng tử
+Xu hướng: chuyển từ RSA/DSA sang Ed25519, ECDSA, và chuẩn bị ML-DSA cho thời kỳ hậu lượng tử
+
+--- PAGE 54 ---
+6.4.12 Ứng dụng, ưu và nhược điểm của chữ ký số
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+54
+Ứng dụng
+•
+Hợp đồng, văn bản hành 
+chính điện tử
+•
+Hóa đơn điện tử, khai thuế, 
+hải quan
+•
+Ký phần mềm, cập nhật hệ 
+điều hành
+•
+Giao dịch blockchain
+•
+Chứng chỉ HTTPS
+Ưu điểm
+•
+An toàn, gắn với nội dung
+•
+Ký từ xa, nhanh, tiết kiệm chi 
+phí
+•
+Có giá trị pháp lý
+•
+Tự động xác minh hàng loạt
+•
+Thân thiện môi trường
+Nhược điểm / rủi ro
+•
+Mất hoặc lộ khóa bí mật
+•
+Phụ thuộc độ tin cậy của CA
+•
+Chi phí ban đầu, kỹ năng số
+•
+Khác biệt chuẩn, tương thích 
+phần mềm
+•
+Lỗi triển khai (k, hàm băm yếu)
+
+--- PAGE 55 ---
+Bài tập thực hành 6.4 – Chữ ký số
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+55
+✓4.1 RSA n = 33, e = 3, d = 7: ký h = 5 và xác minh
+✓4.2 ElGamal p = 23, α = 5, a = 6: ký m = 7 với k = 5; xác minh
+✓4.3 DSA (tham số 4.7): ký H = 77 với k = 30
+✓4.4 Hai chữ ký DSA (2, 34) cho H = 41 và (2, 18) cho H = 77 dùng 
+chung k. Tìm x
+✎
+Cách làm
+•
+Làm cá nhân 10–15 phút
+•
+Trình bày từng bước, không 
+chỉ ghi đáp số
+•
+Đối chiếu kết quả với bạn 
+bên cạnh
+
+--- PAGE 56 ---
+Bài tập về nhà (1/3)
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+56
+Phần 1 – Một chiều, cửa sập
+1.
+Chứng minh: biết n = pq và φ(n) thì tìm được
+p, q (gợi ý: p + q = n − φ(n) + 1)
+2.
+Rabin với n = 253 = 11·23: tìm cả4 căn bậc
+hai của 3
+3.
+Dùng baby-step giant-step tìm x: 2ˣ ≡ 11 (mod 
+29)
+4.
+Vì sao hàm băm là hàm một chiều nhưng
+không có cửa sập?
+Phần 2 – Hàm băm
+1.
+h(m) = m mod 1000: chỉ ra h không kháng tiền 
+ảnh, tiền ảnh thứ hai và va chạm
+2.
+Băm 2⁴⁰ thông điệp với hàm 128 bit: ước 
+lượng xác suất có va chạm
+3.
+Chứng minh: H kháng va chạm ⇒H′(x) = 
+H(H(x)) kháng va chạm
+4.
+Thông điệp dài 448 bit sau khi đệm SHA-256 
+có bao nhiêu khối 512 bit?
+
+--- PAGE 57 ---
+Bài tập về nhà (2/3)
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+57
+Phần 3 – DH và ElGamal
+1.
+Thiết kếgiao thức DH ba bên đểAlice, Bob, 
+Carol có chung gabc
+2.
+ElGamal p = 2579, α = 2, a = 765: tính β; mã
+hóa m = 1299 với k = 853 rồi giải mã
+3.
+Từbản mã (r, t) của m, tạo bản mã của 3m mà
+không cần khóa
+4.
+Vì sao p − 1 cần có ước nguyên tốlớn? 
+(Pohlig–Hellman)
+Phần 4 – Chữ ký số
+1.
+RSA n = 3233, e = 17, d = 2753: ký h = 123 và 
+xác minh
+2.
+ElGamal: chỉ ra cách giả mạo tồn tại khi ký 
+trực tiếp m (không băm)
+3.
+Vì sao DSA phải kiểm tra 0 < r < q và 0 < s < q?
+4.
+So sánh RSA-PSS và Ed25519 về kích thước, 
+tốc độ, rủi ro triển khai
+
+--- PAGE 58 ---
+Bài tập về nhà (3/3)
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+58
+Bài tập lập trình (1)
+1.
+Cài đặt bước đệm SHA-256, so kết quả với 
+hashlib; đo trung bình số bit thay đổi khi lật 1 
+bit đầu vào
+2.
+Tấn công ngày sinh trên 32 bit đầu của SHA-
+256: đếm số lần băm đến khi va chạm, so với 
+2¹⁶
+3.
+Tìm nonce để SHA-256("tên-nonce") có 20 bit 
+đầu bằng 0; đo thời gian
+Bài tập lập trình (2)
+1.
+DH với nhóm 2048 bit (RFC 3526) và X25519: 
+so sánh thời gian
+2.
+Cài đặt ElGamal mã hóa & chữký; mô phỏng
+tấn công dùng lại k
+3.
+Ký và xác minh tệp PDF bằng RSA-PSS và
+Ed25519 (thư viện cryptography)
+
+--- PAGE 59 ---
+Tổng kết bài học
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+59
+Một chiều & cửa sập
+Dễ tính xuôi, khó tính ngược; cửa 
+sập (p, q, d) là nền tảng khóa 
+công khai
+Hàm băm
+Kháng tiền ảnh, tiền ảnh thứ hai, 
+va chạm (2ⁿ/²); dùng SHA-
+256/SHA-3
+Diffie–Hellman
+K = gᵃᵇmod p; cần xác thực để 
+chống MITM
+ElGamal
+(αᵏ, βᵏm); xác suất, bản mã gấp 
+đôi, không dùng lại k
+Chữ ký số
+Băm rồi ký: RSA, ElGamal, DSA, 
+Schnorr/EdDSA
+PKI
+Chứng chỉ X.509 và chuỗi tin cậy 
+gắn khóa công khai với danh tính
+
+--- PAGE 60 ---
+Bài 6 - Hàm băm và Chữ ký số
+Mã hóa thông tin nâng cao - COM608
+TS. Nguyễn Ngọc Trường Minh
+Khoa Đào tạo Sau đại học
+11/10/2026
+60
+KẾT THÚC BÀI SỐ 06

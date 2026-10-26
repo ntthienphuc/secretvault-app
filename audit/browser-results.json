@@ -1,0 +1,9 @@
+{
+  "registration": true,
+  "uploadThreeChunks": true,
+  "manifestAndGcmVerification": true,
+  "offlineDecryptionAfterSenderLogout": true,
+  "authenticatedLiveFlowTwoTabs": true,
+  "consoleErrorsFinalStableRun": 0,
+  "extraCourseScreensRemoved": true
+}

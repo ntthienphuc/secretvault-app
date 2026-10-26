@@ -1,0 +1,41 @@
+PASS Instructor's DH and ElGamal formula vectors
+PASS RFC 3526 group15 is 3072 bits with safe subgroup generator
+PASS RFC5869 HKDF test case 1 matches 42-byte vector
+PASS Unauthenticated file metadata access is rejected
+PASS Cross-origin requests are rejected
+PASS Register 3 independent signed public identities
+PASS Duplicate registration cannot replace an existing identity
+PASS Registration rejects malformed email and blank display name
+PASS A registration with another identity's signature is rejected
+PASS Login accepts email case/outer-space normalization
+PASS Logging out invalidates only that session and allows a fresh login
+PASS Wrong password cannot log in
+PASS Private identity bundle cannot unlock with wrong password
+PASS Server receives a derived credential, never a raw vault password
+PASS Authentication credential cannot directly unlock the private bundle
+PASS Same account unlocks its keys on another session/device
+PASS Pin both peers' public key fingerprints
+PASS Wrong contact fingerprint is rejected
+PASS Encrypt/upload/commit a 3-chunk signed file
+PASS Unshared files and owner wraps do not leak to Bob
+PASS Committed ciphertext cannot be overwritten
+PASS Another user cannot claim file ownership or commit
+PASS Owner AES unwrap and chunk download match original bytes
+PASS Modified signed manifest is rejected by Ed25519
+PASS ElGamal invalid subgroup keys 0,1,p-1 are rejected
+PASS Offline ElGamal envelopes are randomized per use
+PASS Tampered offline envelope is rejected at API signature check
+PASS Store valid signed offline key envelope
+PASS Sender can log out before recipient decrypts offline share
+PASS Wrong private key cannot open an offline envelope
+PASS Envelope is bound to file and recipient context
+PASS AES-GCM fails on a changed ciphertext byte
+PASS Revocation blocks the recipient's next file download
+PASS Signed ephemeral DH offer is accepted for the correct recipient
+PASS Mallory cannot accept Bob's DH offer
+PASS Changed DH public key invalidates transcript signature
+PASS Correct signed acceptance yields equal HKDF session keys
+PASS Live payload relay preserves GCM tags and signed hashes
+PASS Live ciphertext cannot be transplanted into a different transcript
+PASS Unrelated users cannot read any live payload
+{"passed":40,"report":"C:\\Users\\thien\\Downloads\\Demo\\secretvault-app\\audit\\installed-lan-integration-results.json"}

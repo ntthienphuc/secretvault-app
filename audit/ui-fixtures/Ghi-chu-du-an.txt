@@ -1,0 +1,2 @@
+SecretVault — ghi chú thử nghiệm giao diện.
+Khóa công khai / Diffie–Hellman / ElGamal Hybrid.

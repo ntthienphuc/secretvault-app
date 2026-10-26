@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-10-26T10:47:35.384727+00:00",
+  "installer": "SecretVault-Setup-2.1.0-x64.exe",
+  "sha256": "514fc7a179bbce5adb5fa5c7212bd7b5e562654a646782126308ff7da8619cc9",
+  "bytes": 13661649,
+  "checks": [
+    "Actual Setup.exe installed successfully without admin",
+    "Installed assets exactly match current source; no lab/test database bundled",
+    "Bundled Python server runs with system Python absent from PATH",
+    "Full HTTP and cryptographic integration suite passed against installed executable",
+    "SQLite persistence remains valid after packaged server restart boundary",
+    "Installed desktop launcher opens and serves HTTP with bundled Tcl/Tk",
+    "QA installation uninstalls; isolated runtime data remains separate"
+  ],
+  "passed": 7,
+  "limitations": [
+    "Desktop launcher startup probed; native UI automation was unavailable",
+    "No public deployment or two-physical-PC network test"
+  ]
+}

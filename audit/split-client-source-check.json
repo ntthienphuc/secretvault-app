@@ -1,0 +1,9 @@
+{
+  "clientVersion": "2.3.0",
+  "url": "https://192.168.1.3:8443",
+  "hostId": "5d409f513d9a640676412a6d4d310f4a60a83fb10c0ba1be8c300596aa2780d6",
+  "serverVersion": "2.2.0",
+  "tlsVerified": true,
+  "windowsTrusted": true,
+  "startsServer": false
+}

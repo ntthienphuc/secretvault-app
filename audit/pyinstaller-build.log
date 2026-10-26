@@ -1,0 +1,109 @@
+198 INFO: PyInstaller: 6.22.3, contrib hooks: 2026.9
+198 INFO: Python: 3.11.9
+214 INFO: Platform: Windows-10-10.0.26300-SP0
+214 INFO: Python environment: C:\Users\thien\Downloads\Demo\secretvault-app\.venv
+214 INFO: wrote C:\Users\thien\Downloads\Demo\secretvault-app\SecretVault.spec
+833 INFO: Module search paths (PYTHONPATH):
+['C:\\Users\\thien\\Downloads\\Demo\\secretvault-app',
+ 'C:\\Users\\thien\\AppData\\Local\\Programs\\Python\\Python311\\python311.zip',
+ 'C:\\Users\\thien\\AppData\\Local\\Programs\\Python\\Python311\\DLLs',
+ 'C:\\Users\\thien\\AppData\\Local\\Programs\\Python\\Python311\\Lib',
+ 'C:\\Users\\thien\\AppData\\Local\\Programs\\Python\\Python311',
+ 'C:\\Users\\thien\\Downloads\\Demo\\secretvault-app\\.venv',
+ 'C:\\Users\\thien\\Downloads\\Demo\\secretvault-app\\.venv\\Lib\\site-packages',
+ 'C:\\Users\\thien\\Downloads\\Demo\\secretvault-app']
+1185 INFO: Appending 'datas' from .spec
+1198 INFO: checking Analysis
+1217 INFO: Building because C:\Users\thien\Downloads\Demo\secretvault-app\public\src\app.js changed
+1218 INFO: Looking for Python shared library...
+1218 INFO: Using Python shared library: C:\Users\thien\AppData\Local\Programs\Python\Python311\python311.dll
+1218 INFO: Running Analysis Analysis-00.toc
+1218 INFO: Target bytecode optimization level: 0
+1219 INFO: Initializing module dependency graph...
+1220 INFO: Initializing module graph hook caches...
+1239 INFO: Analyzing modules for base_library.zip ...
+2393 INFO: Processing standard module hook 'hook-heapq.py' from 'C:\\Users\\thien\\Downloads\\Demo\\secretvault-app\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+2501 INFO: Processing standard module hook 'hook-encodings.py' from 'C:\\Users\\thien\\Downloads\\Demo\\secretvault-app\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+4333 INFO: Processing standard module hook 'hook-math.py' from 'C:\\Users\\thien\\Downloads\\Demo\\secretvault-app\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+4459 INFO: Processing standard module hook 'hook-pickle.py' from 'C:\\Users\\thien\\Downloads\\Demo\\secretvault-app\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+6181 INFO: Caching module dependency graph...
+6223 INFO: Analyzing C:\Users\thien\Downloads\Demo\secretvault-app\app.py
+6591 INFO: Processing standard module hook 'hook-webbrowser.py' from 'C:\\Users\\thien\\Downloads\\Demo\\secretvault-app\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+6636 INFO: Processing standard module hook 'hook-sqlite3.py' from 'C:\\Users\\thien\\Downloads\\Demo\\secretvault-app\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+7030 INFO: Processing standard module hook 'hook-cryptography.py' from 'C:\\Users\\thien\\Downloads\\Demo\\secretvault-app\\.venv\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+8227 INFO: hook-cryptography: cryptography does not seem to be using dynamically linked OpenSSL.
+8259 INFO: Processing pre-find-module-path hook 'hook-tkinter.py' from 'C:\\Users\\thien\\Downloads\\Demo\\secretvault-app\\.venv\\Lib\\site-packages\\PyInstaller\\hooks\\pre_find_module_path'
+8261 INFO: TclTkInfo: initializing cached Tcl/Tk info...
+8678 INFO: Processing standard module hook 'hook-_tkinter.py' from 'C:\\Users\\thien\\Downloads\\Demo\\secretvault-app\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+8722 INFO: Analyzing hidden import 'cryptography.cobblestone'
+8722 INFO: Analyzing hidden import 'cryptography.fernet'
+8763 INFO: Analyzing hidden import 'cryptography.hazmat._oid'
+8773 INFO: Analyzing hidden import 'cryptography.hazmat.asn1'
+8786 INFO: Processing pre-safe-import-module hook 'hook-typing_extensions.py' from 'C:\\Users\\thien\\Downloads\\Demo\\secretvault-app\\.venv\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+8787 INFO: SetuptoolsInfo: initializing cached setuptools info...
+9402 INFO: Analyzing hidden import 'cryptography.hazmat.backends'
+9441 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.asymmetric.dh'
+9445 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.asymmetric.dsa'
+9449 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.asymmetric.ed448'
+9453 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.asymmetric.mldsa'
+9465 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.asymmetric.mlkem'
+9472 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.asymmetric.types'
+9481 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.ciphers.aead'
+9483 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.cmac'
+9484 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.constant_time'
+9485 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.hpke'
+9486 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.kdf'
+9487 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.kdf.argon2'
+9489 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.kdf.concatkdf'
+9489 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.kdf.hkdf'
+9491 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.kdf.kbkdf'
+9493 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.kdf.pbkdf2'
+9493 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.kdf.scrypt'
+9495 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.kdf.x963kdf'
+9496 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.keywrap'
+9497 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.poly1305'
+9497 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.serialization'
+9548 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.serialization.pkcs12'
+9677 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.serialization.pkcs7'
+9687 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.twofactor'
+9689 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.twofactor.hotp'
+9693 INFO: Analyzing hidden import 'cryptography.hazmat.primitives.twofactor.totp'
+9696 INFO: Analyzing hidden import 'cryptography.x509.ocsp'
+9704 INFO: Processing module hooks (post-graph stage)...
+9712 INFO: Processing standard module hook 'hook-_tkinter.py' from 'C:\\Users\\thien\\Downloads\\Demo\\secretvault-app\\.venv\\Lib\\site-packages\\PyInstaller\\hooks'
+9724 INFO: Performing binary vs. data reclassification (1051 entries)
+9990 INFO: Looking for ctypes DLLs
+10002 INFO: Analyzing run-time hooks ...
+10003 INFO: Including run-time hook 'pyi_rth_inspect.py' from 'C:\\Users\\thien\\Downloads\\Demo\\secretvault-app\\.venv\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+10006 INFO: Including run-time hook 'pyi_rth_cryptography_openssl.py' from 'C:\\Users\\thien\\Downloads\\Demo\\secretvault-app\\.venv\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\rthooks'
+10008 INFO: Including run-time hook 'pyi_rth__tkinter.py' from 'C:\\Users\\thien\\Downloads\\Demo\\secretvault-app\\.venv\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+10045 INFO: Creating base_library.zip...
+10070 INFO: Looking for dynamic libraries
+10320 INFO: Extra DLL search directories (AddDllDirectory): []
+10320 INFO: Extra DLL search directories (PATH): []
+11009 INFO: Warnings written to C:\Users\thien\Downloads\Demo\secretvault-app\build\SecretVault\warn-SecretVault.txt
+11038 INFO: Graph cross-reference written to C:\Users\thien\Downloads\Demo\secretvault-app\build\SecretVault\xref-SecretVault.html
+11079 INFO: checking PYZ
+11092 INFO: Building because C:\Users\thien\Downloads\Demo\secretvault-app\vaultserver\server.py changed
+11092 INFO: Building PYZ (ZlibArchive) C:\Users\thien\Downloads\Demo\secretvault-app\build\SecretVault\PYZ-00.pyz
+11302 INFO: Building PYZ (ZlibArchive) C:\Users\thien\Downloads\Demo\secretvault-app\build\SecretVault\PYZ-00.pyz completed successfully.
+11310 INFO: checking PKG
+11311 INFO: Building because C:\Users\thien\Downloads\Demo\secretvault-app\build\SecretVault\PYZ-00.pyz changed
+11311 INFO: Building PKG (CArchive) SecretVault.pkg
+11326 INFO: Building PKG (CArchive) SecretVault.pkg completed successfully.
+11327 INFO: Bootloader C:\Users\thien\Downloads\Demo\secretvault-app\.venv\Lib\site-packages\PyInstaller\bootloader\Windows-64bit-intel\runw.exe
+11327 INFO: checking EXE
+11328 INFO: Rebuilding EXE-00.toc because pkg is more recent
+11328 INFO: Building EXE from EXE-00.toc
+11328 INFO: Copying bootloader EXE to C:\Users\thien\Downloads\Demo\secretvault-app\build\SecretVault\SecretVault.exe
+11334 INFO: Copying icon to EXE
+11338 INFO: Copying 0 resources to EXE
+11338 INFO: Embedding manifest in EXE
+11341 INFO: Appending PKG archive to EXE
+11343 INFO: Fixing EXE headers
+11437 INFO: Building EXE from EXE-00.toc completed successfully.
+11447 INFO: checking COLLECT
+11458 INFO: Removing dir C:\Users\thien\Downloads\Demo\secretvault-app\dist\SecretVault
+11668 INFO: Building COLLECT COLLECT-00.toc
+13013 INFO: Building COLLECT COLLECT-00.toc completed successfully.
+13035 INFO: Build complete! The results are available in: C:\Users\thien\Downloads\Demo\secretvault-app\dist

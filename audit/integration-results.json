@@ -1,0 +1,147 @@
+{
+  "timestamp": "2026-10-26T10:47:33.258Z",
+  "target": "http://127.0.0.1:8788",
+  "passed": 35,
+  "checks": [
+    {
+      "name": "Instructor's DH and ElGamal formula vectors",
+      "passed": true
+    },
+    {
+      "name": "RFC 3526 group15 is 3072 bits with safe subgroup generator",
+      "passed": true
+    },
+    {
+      "name": "RFC5869 HKDF test case 1 matches 42-byte vector",
+      "passed": true
+    },
+    {
+      "name": "Unauthenticated file metadata access is rejected",
+      "passed": true
+    },
+    {
+      "name": "Cross-origin requests are rejected",
+      "passed": true
+    },
+    {
+      "name": "Register 3 independent signed public identities",
+      "passed": true
+    },
+    {
+      "name": "Wrong password cannot log in",
+      "passed": true
+    },
+    {
+      "name": "Private identity bundle cannot unlock with wrong password",
+      "passed": true
+    },
+    {
+      "name": "Server receives a derived credential, never a raw vault password",
+      "passed": true
+    },
+    {
+      "name": "Authentication credential cannot directly unlock the private bundle",
+      "passed": true
+    },
+    {
+      "name": "Same account unlocks its keys on another session/device",
+      "passed": true
+    },
+    {
+      "name": "Pin both peers' public key fingerprints",
+      "passed": true
+    },
+    {
+      "name": "Wrong contact fingerprint is rejected",
+      "passed": true
+    },
+    {
+      "name": "Encrypt/upload/commit a 3-chunk signed file",
+      "passed": true
+    },
+    {
+      "name": "Unshared files and owner wraps do not leak to Bob",
+      "passed": true
+    },
+    {
+      "name": "Committed ciphertext cannot be overwritten",
+      "passed": true
+    },
+    {
+      "name": "Another user cannot claim file ownership or commit",
+      "passed": true
+    },
+    {
+      "name": "Owner AES unwrap and chunk download match original bytes",
+      "passed": true
+    },
+    {
+      "name": "Modified signed manifest is rejected by Ed25519",
+      "passed": true
+    },
+    {
+      "name": "ElGamal invalid subgroup keys 0,1,p-1 are rejected",
+      "passed": true
+    },
+    {
+      "name": "Offline ElGamal envelopes are randomized per use",
+      "passed": true
+    },
+    {
+      "name": "Tampered offline envelope is rejected at API signature check",
+      "passed": true
+    },
+    {
+      "name": "Store valid signed offline key envelope",
+      "passed": true
+    },
+    {
+      "name": "Sender can log out before recipient decrypts offline share",
+      "passed": true
+    },
+    {
+      "name": "Wrong private key cannot open an offline envelope",
+      "passed": true
+    },
+    {
+      "name": "Envelope is bound to file and recipient context",
+      "passed": true
+    },
+    {
+      "name": "AES-GCM fails on a changed ciphertext byte",
+      "passed": true
+    },
+    {
+      "name": "Revocation blocks the recipient's next file download",
+      "passed": true
+    },
+    {
+      "name": "Signed ephemeral DH offer is accepted for the correct recipient",
+      "passed": true
+    },
+    {
+      "name": "Mallory cannot accept Bob's DH offer",
+      "passed": true
+    },
+    {
+      "name": "Changed DH public key invalidates transcript signature",
+      "passed": true
+    },
+    {
+      "name": "Correct signed acceptance yields equal HKDF session keys",
+      "passed": true
+    },
+    {
+      "name": "Live payload relay preserves GCM tags and signed hashes",
+      "passed": true
+    },
+    {
+      "name": "Live ciphertext cannot be transplanted into a different transcript",
+      "passed": true
+    },
+    {
+      "name": "Unrelated users cannot read any live payload",
+      "passed": true
+    }
+  ]
+}

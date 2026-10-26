@@ -1,0 +1,17 @@
+{
+  "version": "2.1.0",
+  "reviewedAt": "2026-10-26T11:58:48.745378+00:00",
+  "scope": "Local browser UX audit and hosting proposal; no deployment",
+  "testData": "Synthetic design-QA accounts in audit/ui-refresh-runtime",
+  "oneRunLocalLoginUnlockMs": 2291,
+  "oneRunLocalInvitationVisibleMs": 1971,
+  "timingsIncludeBrowserAutomationOverhead": true,
+  "localDhTransferCompletedAndVerified": true,
+  "reloadReturnedToLogin": true,
+  "consoleWarningsOrErrorsObserved": 0,
+  "reliableAcceptToPayloadTimingRecorded": false,
+  "downloadToNativeFilesystemVerified": false,
+  "wanOrPhysicalTwoDeviceTest": false,
+  "screenshot": "audit/online-ux-live-check.png",
+  "proposal": "docs/ONLINE_UX_REVIEW.md"
+}
