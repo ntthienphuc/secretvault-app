@@ -75,7 +75,7 @@ function admin(s) {
 }
 
 function setup(s) {
-  return `${title("THIẾT LẬP CHỦ SỞ HỮU","Kích hoạt quyền quản trị.","Chỉ chủ ứng dụng có mã kích hoạt được cung cấp riêng.")}<section class="panel form-panel setup-card"><form data-form="claim" class="form-grid"><label class="field-label" for="claim-code">Mã kích hoạt<input id="claim-code" class="field-input" type="password" autocomplete="off" required/></label><button class="button primary" ${s.busy?"disabled":""}>Kích hoạt cho tài khoản hiện tại</button><p class="form-hint">Tài khoản: ${esc(s.user.email)}. Mã chỉ dùng một lần cho toàn hệ thống.</p></form></section>`;
+  return `${title("THIẾT LẬP CHỦ SỞ HỮU","Kích hoạt quyền quản trị.","Chỉ chủ ứng dụng có mã kích hoạt được cung cấp riêng.")}<section class="panel form-panel setup-card"><form data-form="claim" class="form-grid"><label class="field-label" for="claim-code">Mã kích hoạt<input id="claim-code" class="field-input" type="password" autocomplete="off" value="${esc(s.ownerCode)}" required/></label><button class="button primary" ${s.busy?"disabled":""}>Kích hoạt cho tài khoản hiện tại</button><p class="form-hint">Tài khoản: ${esc(s.user.email)}. Mã chỉ dùng một lần cho toàn hệ thống.</p></form></section>`;
 }
 
 function modal(s) {

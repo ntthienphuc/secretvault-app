@@ -6,6 +6,7 @@ const root = document.getElementById("app");
 const state = {
   authMode: "login", loginEmail: "", user: null, identity: null, encryptedBundle: null,
   service: "connecting",
+  ownerCode: new URLSearchParams(location.hash.slice(1)).get("owner") || "",
   remote: { users: [], contacts: [], files: [], shares: [], live: [], activity: [] },
   view: location.pathname === "/admin" ? "admin" : location.pathname === "/setup" ? "setup" : "vault", search: "", busy: "", modal: null, candidate: null, admin: null, trash: null,
   liveFile: null, connected: true, remoteHash: "", signatures: new Map(), verified: new Map(),
@@ -612,6 +613,7 @@ root.addEventListener("submit", (event) => {
       const code = form.querySelector("#claim-code").value;
       progress("Đang kích hoạt…");
       await api.post("/api/admin/claim", { code });
+      state.ownerCode = "";
       state.view = "admin";
       history.replaceState({}, "", "/admin");
       await refresh(true);
@@ -677,6 +679,7 @@ root.addEventListener("input", (event) => {
 
 // Reloading closes the local unlocked session and requires a normal sign-in.
 api.setToken("");
+if (state.ownerCode) history.replaceState({}, "", location.pathname);
 render();
 async function checkService() {
   state.service = "connecting";
