@@ -1,4 +1,4 @@
-#define MyAppVersion "3.0.1"
+#define MyAppVersion "3.2.0"
 [Setup]
 AppId=SecretVaultOnlineV3
 AppName=SecretVault Online

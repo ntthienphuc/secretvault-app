@@ -1,4 +1,4 @@
-# SecretVault web/API 3.1 — trạng thái bàn giao
+# SecretVault web/API 3.2 — trạng thái bàn giao
 
 Cập nhật ngày 30/10/2026, múi giờ Việt Nam.
 
@@ -8,15 +8,25 @@ Cập nhật ngày 30/10/2026, múi giờ Việt Nam.
 - Quản trị: https://secretvault-online.vercel.app/admin
 - Python API: https://secretvault-api-thienphuc.onrender.com
 - Nguồn: https://github.com/ntthienphuc/secretvault-app
-- Vercel phục vụ giao diện hai tab gửi từ commit `edc058d`; cả năm tài nguyên thay đổi khớp mã nguồn sau chuẩn hóa xuống dòng.
-- Render Free, Singapore, một instance; tự deploy đang tắt. Backend API 3.1.0, commit runtime `9b5978e`, đã deploy thành công và kiểm tra health ngày 30/10/2026. Backend đọc được snapshot cũ; sau khi có snapshot v2 không quay về runtime 3.0.0.
+- Vercel phục vụ giao diện hai tab gửi từ commit `d3f2a5a`; cả năm tài nguyên thay đổi khớp mã nguồn sau chuẩn hóa xuống dòng.
+- Render Free, Singapore, một instance; tự deploy đang tắt. Backend API 3.2.0, commit runtime `82cabb4`, đã deploy thành công và kiểm tra health ngày 30/10/2026. Backend đọc được snapshot cũ; sau khi có snapshot v2 không quay về runtime 3.0.0.
 - Bucket HF riêng `thienphuc12339/secretvault-api-storage` giữ bản mã và snapshot. Token chỉ nằm ở secret của Render. Space thử nghiệm cũ vẫn dừng; không chạy hai writer cùng bucket.
+
+## Cập nhật phiên đăng nhập 3.2
+
+F5 giữ phiên trong tab; tùy chọn nhớ thiết bị 7 ngày khôi phục qua restart. Ghi nhớ không lưu mật khẩu, dùng cache bọc mã trên hồ sơ trình duyệt. Snapshot v3 đọc v1/v2; không rollback về 3.1/3.0. Đã chạy 109 lượt kiểm thử local, gồm 16 kiểm tra mới về cache và session, 4 kiểm tra retention nền; đây là lượt kiểm thử chứ không phải 109 chứng minh bảo mật độc lập. Bằng chứng ở audit/review-session-20261030/.
+
+Chrome local đã thử F5 ở cả hai chế độ, tab mới, nhớ qua restart server, tải lên sau khôi phục khóa và đăng xuất đồng bộ hai tab. Production đã thử F5, khôi phục Alice QA, giải mã tệp cũ và đăng xuất rồi F5 không tự mở lại. Render deploy `dep-dbi35kqjnfac73cmdep0` xác nhận Live.
+
+Hai mẫu đo upload 256 KiB: 21.343 giây trước, 20.385 giây sau; login 7.398 và 7.272 giây. Chênh nhỏ, không cam kết cải thiện ổn định. Resume qua bootstrap tránh login lại. Chưa nâng cấp gói trả phí. Xem SESSION_AND_PERFORMANCE.md để biết nguyên nhân, giới hạn, chi phí và cách nâng cấp có tác dụng.
 
 ## Bộ cài và tài khoản quản trị
 
-Bộ cài hiện hành duy nhất: `release/SecretVault-Online-Setup-3.0.1-x64.exe`. Gói dùng ngay và báo cáo/slide: `deliverables/SecretVault_Online/`. App dùng Edge WebView2 để mở cùng web và dữ liệu online; máy client không cần Python, host LAN hay chứng chỉ nội bộ.
+Bộ cài hiện hành duy nhất: `release/SecretVault-Online-Setup-3.2.0-x64.exe`. Gói dùng ngay và báo cáo/slide: `deliverables/SecretVault_Online/`. App dùng Edge WebView2 để mở cùng web và dữ liệu online; máy client không cần Python, host LAN hay chứng chỉ nội bộ.
 
-Đã build, cài vào thư mục QA, chạy chẩn đoán, gỡ QA và cập nhật app tại máy Windows hiện có. Sau đó đăng nhập, tải tệp đã upload từ Chrome và lưu qua Save As thật; bản lưu 107 byte khớp SHA-256 với bản gốc. Đây không phải kiểm thử trên Windows sạch. Bộ cài chưa ký số.
+Bản 3.2.0 đã cài thử thành công, chẩn đoán web/API 200; GUI Windows đã đăng nhập Bob QA, xác nhận tùy chọn nhớ 7 ngày, đóng hẳn rồi mở lại tự vào kho, sau đó đăng xuất. Đã cập nhật bản cài chính tại `%LOCALAPPDATA%\Programs\SecretVaultOnline`, registry hiển thị 3.2.0 và chẩn đoán đạt. Thử nghiệm trên máy Windows hiện có, chưa phải Windows sạch hoặc tải nhiều người đồng thời. Bộ cài trước được lưu trong archive; báo cáo/slide 3.0.1 được giữ làm bản xuất lịch sử và hướng dẫn mới mô tả 3.2.
+
+Ở đợt 3.0.1 đã build, cài vào thư mục QA, chạy chẩn đoán, gỡ QA và cập nhật app tại máy Windows hiện có. Sau đó đăng nhập, tải tệp đã upload từ Chrome và lưu qua Save As thật; bản lưu 107 byte khớp SHA-256 với bản gốc. Đây không phải kiểm thử trên Windows sạch. Bộ cài chưa ký số.
 
 Chủ hệ thống vẫn cần kích hoạt quản trị một lần bằng shortcut riêng `.local/Kich-hoat-quan-tri.url`. Tạo hoặc đăng nhập tài khoản của chính chủ rồi kích hoạt. Mã không nằm trong bộ cài hay gói chia sẻ. Đăng ký thông thường không cấp quyền admin; tài khoản QA không được dùng để chiếm quyền chủ production.
 

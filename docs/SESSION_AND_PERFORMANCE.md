@@ -1,6 +1,6 @@
 # Phiên đăng nhập và tốc độ — 30/10/2026
 
-Web/API 3.2.0; launcher Windows Online vẫn 3.0.1 và tải cùng web.
+Web/API và launcher Windows Online 3.2.0. Bộ cài mới dùng hồ sơ WebView2 bền vững cho lựa chọn ghi nhớ; bản 3.0.1 cũ vẫn chạy riêng tư và không giữ dữ liệu sau khi đóng app.
 
 ## F5 và ghi nhớ thiết bị
 
@@ -34,3 +34,7 @@ Hạn mức ứng dụng: 25 MiB/tệp, mặc định 100 MiB/người, tổng 5
 - HF Free có 100 GB private storage cấp tài khoản, dùng chung các repo/bucket; không phải hạn mức riêng được cấp thêm cho SecretVault. Xem https://huggingface.co/docs/hub/storage-limits . Không đổi quyền hoặc gói HF.
 
 Giá USD đã kiểm tra ngày 30/10/2026; chi phí thực tế phụ thuộc thuế và usage. Không mua hoặc nâng cấp gói trả phí trong đợt này.
+
+## Đo sau tối ưu
+
+Một mẫu tương tự trên production 3.2: login 7.272 giây; upload 256 KiB 5.632 + 9.059 + 5.694 = 20.385 giây, so với 21.343 giây trước đó. Chênh khoảng 4.5% ở mẫu này, chưa đủ để khẳng định cải thiện ổn định. Bootstrap 0.156 giây; khôi phục phiên tránh phải login lại và thực hiện KDF. Hai mẫu không kiểm soát tải HF/Render nên không dùng làm benchmark so sánh chính thức. Điểm chậm chính vẫn là ghi/kiểm chứng qua HF.

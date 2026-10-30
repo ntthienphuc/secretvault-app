@@ -1,4 +1,4 @@
-# SecretVault Online — web/API 3.1.0
+# SecretVault Online — web/API 3.2.0
 
 Ứng dụng lưu trữ và chia sẻ tệp mã hóa với backend Python. Bản bàn giao hiện tại dùng chung dịch vụ online cho web, điện thoại và Windows. Không cần cùng Wi-Fi, mở cổng router hay cài Python trên máy người dùng.
 
@@ -6,7 +6,7 @@
 
 - **Web:** https://secretvault-online.vercel.app
 - **Quản trị:** https://secretvault-online.vercel.app/admin
-- **Windows x64:** bộ cài duy nhất trong `release/SecretVault-Online-Setup-3.0.1-x64.exe`.
+- **Windows x64:** bộ cài duy nhất trong `release/SecretVault-Online-Setup-3.2.0-x64.exe`.
 - **Gói bàn giao:** `deliverables/SecretVault_Online/`; tài liệu và slide nằm trong `Tai_lieu/`.
 
 Đăng ký bằng email và mật khẩu ít nhất 10 ký tự. Tải tệp vào **Tệp của tôi**, chọn **Chia sẻ**, nhập email tài khoản người nhận. Người nhận mở **Đã nhận** trên web hoặc app Windows. Mục **Gửi tệp** có hai tab trực tiếp và nhận sau. Tab nhận sau tự lưu vào kho trước khi chia sẻ; người nhận được chọn tải về hoặc lưu bản riêng. Chuông thông báo xác nhận đã nhận.
@@ -68,3 +68,5 @@ Build bộ cài bằng PowerShell 7, Python build environment và Inno Setup 6: 
 `app.py`, `host_app.py`, `client_app.py`, `public/` và tài liệu LAN phục vụ các phiên bản 2.x. Chúng được giữ để bảo toàn nguồn và tài khoản LAN cũ. Người dùng bản Online chỉ cần bộ cài Online hoặc link web phía trên. Các bộ cài cũ được chuyển khỏi thư mục phát hành hiện hành.
 
 Render miễn phí có thể ngủ khi không hoạt động, nên lần đầu mở cần chờ máy chủ. Đây là bản demo đồ án đã kiểm thử chức năng, chưa qua kiểm toán mật mã độc lập và chưa có cam kết luôn sẵn sàng.
+
+Phiên qua F5, ghi nhớ thiết bị và chi phí hosting: [SESSION_AND_PERFORMANCE.md](docs/SESSION_AND_PERFORMANCE.md). Cài launcher 3.2.0 để nhớ phiên sau khi đóng app Windows.

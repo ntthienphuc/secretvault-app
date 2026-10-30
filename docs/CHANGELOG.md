@@ -1,12 +1,13 @@
 # Thay đổi SecretVault
 
-## Web/API 3.2.0 ngày 30/10/2026
+## Web/API và Windows Online 3.2.0 ngày 30/10/2026
 
 - Giữ phiên qua F5; tùy chọn nhớ thiết bị tối đa 7 ngày, không lưu mật khẩu.
 - IndexedDB bọc dữ liệu mở khóa; đăng xuất xóa cache và khóa các tab cùng tài khoản.
 - Hash token nhớ thiết bị được lưu bền vững, hết hạn cố định; snapshot v3 đọc v1/v2.
 - Dọn snapshot bucket ở nền, bỏ list metadata khỏi từng request ghi; vẫn xác minh snapshot trước thành công.
 - Phân biệt RAM server với quota tệp; giá nâng cấp và giới hạn trong SESSION_AND_PERFORMANCE.md.
+- Bộ cài Windows 3.2.0 dùng hồ sơ WebView2 bền vững; đã thử đóng/mở lại sau khi chọn ghi nhớ. Cần cập nhật launcher 3.0.1 để dùng tính năng này qua các lần mở app.
 
 ## Web/API 3.1.0 ngày 30/10/2026
 

@@ -9,7 +9,7 @@ import traceback
 import webbrowser
 from pathlib import Path
 
-VERSION = "3.0.1"
+VERSION = "3.2.0"
 WEB_URL = "https://secretvault-online.vercel.app"
 
 
@@ -55,8 +55,9 @@ def main():
 
         window.events.loaded += loaded
         # No local certificate, secret key or server configuration. Downloads use
-        # the native save dialog. Sign-in state is cleared when the window closes.
-        webview.start(gui="edgechromium", debug=False, private_mode=True, storage_path=str(data / "browser"))
+        # the native save dialog. The web app controls the explicit seven-day
+        # device-memory option and clears its encrypted cache on logout.
+        webview.start(gui="edgechromium", debug=False, private_mode=False, storage_path=str(data / "browser"))
     except Exception:
         (data / "startup-error.log").write_text(traceback.format_exc(), encoding="utf8")
         import tkinter as tk

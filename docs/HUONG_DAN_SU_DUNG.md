@@ -1,10 +1,10 @@
 # Hướng dẫn SecretVault Online
 
-Cập nhật ngày 30/10/2026 sau đợt thiết kế lại giao diện. Web và app Windows Online 3.0.1 tải cùng giao diện mới; không cần cài lại app.
+Cập nhật ngày 30/10/2026 sau đợt thiết kế lại giao diện. Web và app Windows dùng giao diện mới. Cài launcher Online 3.2.0 để nhớ phiên sau khi đóng app; bản 3.0.1 chạy riêng tư.
 
 ## Mở ứng dụng
 
-Truy cập https://secretvault-online.vercel.app bằng Chrome hoặc Edge trên PC; dùng trình duyệt hiện đại trên điện thoại. Trên Windows x64, chạy bộ cài SecretVault-Online-Setup-3.0.1-x64.exe rồi mở SecretVault Online. Máy khách không cần Python hay server riêng. Web và app cùng tài khoản, tệp và danh bạ; hai người không cần cùng mạng.
+Truy cập https://secretvault-online.vercel.app bằng Chrome hoặc Edge trên PC; dùng trình duyệt hiện đại trên điện thoại. Trên Windows x64, chạy bộ cài SecretVault-Online-Setup-3.2.0-x64.exe rồi mở SecretVault Online. Máy khách không cần Python hay server riêng. Web và app cùng tài khoản, tệp và danh bạ; hai người không cần cùng mạng.
 
 Lần mở đầu có thể phải chờ máy chủ miễn phí thức dậy. Đợi dòng **Đã kết nối an toàn** rồi đăng nhập; nếu thất bại, bấm **Kết nối lại**. Nếu cửa sổ Windows không mở được WebView2, chọn mở bản web khi ứng dụng đề nghị.
 

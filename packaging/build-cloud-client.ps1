@@ -7,4 +7,4 @@ if ($LASTEXITCODE -ne 0) { throw 'Cloud client build failed' }
 $compiler = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'
 & $compiler 'packaging\cloud-client.iss'
 if ($LASTEXITCODE -ne 0) { throw 'Cloud client installer failed' }
-Get-FileHash -Algorithm SHA256 -LiteralPath 'release\SecretVault-Online-Setup-3.0.1-x64.exe'
+Get-FileHash -Algorithm SHA256 -LiteralPath 'release\SecretVault-Online-Setup-3.2.0-x64.exe'

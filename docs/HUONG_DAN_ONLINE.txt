@@ -1,5 +1,5 @@
-SECRET VAULT ONLINE 3.0.1
-Giao diện mới cập nhật 30/10/2026 — app hiện có không cần cài lại
+SECRET VAULT ONLINE 3.2.0
+Cập nhật 30/10/2026 — cài bản 3.2.0 để nhớ phiên sau khi đóng app Windows
 
 WEB: https://secretvault-online.vercel.app
 ADMIN: https://secretvault-online.vercel.app/admin
@@ -7,10 +7,12 @@ ADMIN: https://secretvault-online.vercel.app/admin
 Web và app Windows dùng chung tài khoản và dữ liệu. Không cần cùng Wi-Fi.
 Máy người dùng không cần cài Python, chứng chỉ hoặc chạy server.
 
-1. Chạy bộ cài SecretVault-Online-Setup-3.0.1-x64.exe, hoặc mở link web.
+1. Chạy bộ cài SecretVault-Online-Setup-3.2.0-x64.exe, hoặc mở link web.
 2. Chờ dòng Đã kết nối an toàn. Máy chủ miễn phí có thể cần khoảng một phút.
 3. Tạo tài khoản bằng email và mật khẩu ít nhất 10 ký tự. Giữ mật khẩu:
-   hiện chưa có khôi phục mật khẩu.
+   hiện chưa có khôi phục mật khẩu. F5 giữ phiên trong tab hiện tại.
+   Chọn Ghi nhớ trên thiết bị này trong 7 ngày để mở lại không cần nhập mật khẩu.
+   Chỉ chọn trên máy riêng; Đăng xuất để xóa phiên đã nhớ.
 4. Mở Gửi tệp: chọn Gửi trực tiếp hoặc Gửi để nhận sau.
    Trực tiếp cần cả hai online. Người nhận offline thì app giữ tệp/email và
    chuyển sang tab nhận sau; bấm Gửi tệp để xác nhận.
