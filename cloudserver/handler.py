@@ -15,13 +15,14 @@ from vaultserver.security import ApiError, CHUNK_SIZE, require, valid_id
 from vaultserver.store import now, canonical
 from . import VERSION
 from .store import FILE_LIMIT, TOTAL_QUOTA, USER_QUOTA
+from .delivery import DeliveryMixin
 
 
 class AbortReply(Exception):
     pass
 
 
-class CloudHandler(Handler):
+class CloudHandler(DeliveryMixin, Handler):
     def log_message(self, *args):
         # Do not log user email query strings or authentication bodies.
         pass
@@ -54,6 +55,8 @@ class CloudHandler(Handler):
                 settings = self.store.settings(data["user"]["id"])
                 data["account"] = {"role": settings["role"], "quota": settings["quota"], **self.store.usage(data["user"]["id"])}
                 data["limits"] = {"maxFileSize": FILE_LIMIT, "chunkSize": CHUNK_SIZE}
+                data["features"] = {"offlineInbox": True}
+                data["notifications"] = [dict(row) for row in self.store.all("SELECT id,file_id,kind,message,created,read_at FROM notifications WHERE user_id=? ORDER BY created DESC LIMIT 50", (data["user"]["id"],))]
                 # Friendly product activity rather than the academic implementation log.
                 for item in data.get("activity", []):
                     item["message"] = item["message"].replace("Đã mã hóa và lưu ", "Đã tải lên ").replace("Đã chia sẻ offline cho ", "Đã chia sẻ với ").replace("Có tệp offline mới từ ", "Có tệp mới từ ").replace("Đã giải mã phiên live ", "Đã nhận trực tiếp ")
@@ -82,6 +85,8 @@ class CloudHandler(Handler):
             self._capture_reply = False
         if self._pending_reply:
             super().send_bytes(*self._pending_reply)
+        if method in ("POST", "DELETE") and self._pending_reply and self._pending_reply[2] < 300:
+            self.store.collect_garbage()
 
     def dispatch_cloud(self, method):
         path = urlparse(self.path).path
@@ -89,7 +94,27 @@ class CloudHandler(Handler):
             self.check_origin()
             if path == "/api/health" and method == "GET":
                 self.json({"ok": True, "app": "SecretVault", "version": VERSION, "maxFileSize": FILE_LIMIT,
-                           "chunkSize": CHUNK_SIZE, "storage": "persistent-private-bucket", "setupRequired": self.store.setup_required})
+                           "chunkSize": CHUNK_SIZE, "storage": "persistent-private-bucket", "setupRequired": self.store.setup_required,
+                           "features": {"offlineInbox": True}})
+                return
+            if path == "/api/notifications/read" and method == "POST":
+                user = self.current_user()
+                body = self.read_json()
+                ids = body.get("ids", [])
+                require(isinstance(ids, list) and len(ids) <= 50 and all(isinstance(i, str) for i in ids), "Thông báo không hợp lệ.")
+                for item in ids:
+                    self.store.execute("UPDATE notifications SET read_at=? WHERE id=? AND user_id=? AND read_at=0", (now(), item, user["id"]))
+                self.json({"ok": True})
+                return
+            if re.fullmatch(r"/api/shares/s_[0-9a-f]{32}/receipt", path) and method == "POST":
+                user = self.current_user()
+                body = self.read_json()
+                require(body.get("kind") == "downloaded", "Chỉ bản sao đã lưu hoàn tất mới được xác nhận tự động.")
+                self.receipt(user, path.split("/")[3], "downloaded")
+                self.json({"ok": True})
+                return
+            if re.fullmatch(r"/api/files/f_[0-9a-f]{32}/(purge|upload)", path) and method == "DELETE":
+                self.remove_file_data(self.current_user(), path.split("/")[3], purge=path.endswith("/purge"))
                 return
             if path.startswith("/api/admin/"):
                 user = self.current_user()
@@ -177,6 +202,10 @@ class CloudHandler(Handler):
         self.json({"users": users, "files": files, "events": events, "storage": {**self.store.usage(), "quota": TOTAL_QUOTA}, "summary": {"users": len(users), "online": sum(u["online"] for u in users), "files": self.store.one("SELECT COUNT(*) n FROM files WHERE ready=1 AND deleted=0")["n"], "activeTransfers": active, "shares": self.store.one("SELECT COUNT(*) n FROM shares WHERE revoked=0")["n"]}, "service": {"version": VERSION, "persistence": "Private storage bucket", "maxFileSize": FILE_LIMIT, "maxUsers": 50}})
 
     def begin_file(self, user, body):
+        source_share, existing_copy = self.prepare_copy(user, body)
+        if existing_copy:
+            self.json({"id": existing_copy["id"], "alreadySaved": True})
+            return
         expected = body.get("size", -1)
         name = str(body.get("name", "Đang tải lên"))[:240]
         require(type(expected) is int and -1 <= expected <= FILE_LIMIT, "Mỗi tệp tối đa 25 MiB.", 413)
@@ -191,6 +220,8 @@ class CloudHandler(Handler):
         with self.store.db() as db:
             db.execute("INSERT INTO files VALUES(?,?,?,?,?,?,0,0,?)", (file_id, user["id"], "{}", "", "{}", "", now()))
             db.execute("INSERT INTO uploads VALUES(?,?,?,?)", (file_id, name, expected, now()))
+            if source_share:
+                db.execute("INSERT INTO copy_jobs VALUES(?,?,?)", (file_id, source_share["id"], user["id"]))
         self.json({"id": file_id}, 201)
 
     def file_chunk(self, user, file_id, index, method):
@@ -214,6 +245,9 @@ class CloudHandler(Handler):
         require(not intent or intent["expected"] < 0 or intent["expected"] == body["manifest"]["size"], "Kích thước tải lên không khớp.")
         super().commit_file(user, file_id, body)
         self.store.event(user["id"], "file.uploaded", body["manifest"]["name"])
+        copy = self.store.one("SELECT share_id FROM copy_jobs WHERE file_id=? AND recipient_id=?", (file_id, user["id"]))
+        if copy:
+            self.receipt(user, copy["share_id"], "saved", file_id)
 
     def share(self, user, body):
         require(self.store.settings(body["payload"]["recipientId"])["enabled"], "Người nhận đang tạm dừng.", 403)
@@ -225,6 +259,8 @@ class CloudHandler(Handler):
         active = self.store.one("SELECT COUNT(*) n,COALESCE(SUM(json_extract(offer,'$.size')),0) bytes FROM live WHERE expires>? AND state IN ('offered','accepted','sent')", (now(),))
         require(active["n"] < 12 and active["bytes"] + offer["size"] <= 100 * 1048576, "Đang có nhiều phiên gửi. Thử lại sau ít phút.", 429)
         require(self.store.settings(offer["recipientId"])["enabled"], "Người nhận đang tạm dừng.", 403)
+        peer = self.store.user(offer["recipientId"])
+        require(peer is not None and self.store.public_user(peer)["online"], "Người nhận đã offline. Chuyển sang Gửi để nhận sau.", 409)
         super().live_offer(user, body)
         self.store.event(user["id"], "transfer.invited", offer["name"])
 

@@ -84,3 +84,11 @@ class BucketStore(CloudStore):
 
     def chunk_path(self, file_id, index):
         return BucketBlob(self, file_id, index)
+
+    def delete_blobs(self, file_id, indices):
+        # Include an object whose upload succeeded just before a metadata failure.
+        entries = self.bucket_api.list_bucket_tree(self.bucket_id, prefix="secretvault/ciphertext", recursive=False)
+        names = [Path(entry.path).name for entry in entries if hasattr(entry, "size") and Path(entry.path).name.startswith(file_id + "-") and entry.path.endswith(".bin")]
+        if names:
+            self.bucket_api.batch_bucket_files(self.bucket_id, delete=["secretvault/ciphertext/" + name for name in names])
+        super().delete_blobs(file_id, indices)

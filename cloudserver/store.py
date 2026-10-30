@@ -18,7 +18,8 @@ from pathlib import Path
 
 from vaultserver.store import Store, canonical, now, uid
 
-TABLES = ("users", "contacts", "files", "chunks", "shares", "activity", "accounts", "uploads", "events")
+LEGACY_TABLES = ("users", "contacts", "files", "chunks", "shares", "activity", "accounts", "uploads", "events")
+TABLES = LEGACY_TABLES + ("share_receipts", "copy_jobs", "notifications", "blob_garbage")
 USER_QUOTA = 100 * 1024 * 1024
 TOTAL_QUOTA = 512 * 1024 * 1024
 FILE_LIMIT = 25 * 1024 * 1024
@@ -50,6 +51,22 @@ class CloudStore(Store):
                     id TEXT PRIMARY KEY, actor_id TEXT, kind TEXT NOT NULL,
                     subject TEXT NOT NULL, detail TEXT NOT NULL, created INTEGER NOT NULL
                 );
+                CREATE TABLE IF NOT EXISTS share_receipts (
+                    share_id TEXT PRIMARY KEY, downloaded_at INTEGER NOT NULL DEFAULT 0,
+                    saved_at INTEGER NOT NULL DEFAULT 0, saved_file_id TEXT
+                );
+                CREATE TABLE IF NOT EXISTS copy_jobs (
+                    file_id TEXT PRIMARY KEY, share_id TEXT NOT NULL UNIQUE,
+                    recipient_id TEXT NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS notifications (
+                    id TEXT PRIMARY KEY, user_id TEXT NOT NULL, share_id TEXT NOT NULL,
+                    file_id TEXT NOT NULL, kind TEXT NOT NULL, message TEXT NOT NULL,
+                    created INTEGER NOT NULL, read_at INTEGER NOT NULL DEFAULT 0
+                );
+                CREATE TABLE IF NOT EXISTS blob_garbage (
+                    file_id TEXT PRIMARY KEY, indices TEXT NOT NULL
+                );
             """)
         self.restore()
         self.durable = True
@@ -58,6 +75,7 @@ class CloudStore(Store):
             self.snapshot(db)
         self.trim_snapshots()
         self.setup_required = not bool(self.one("SELECT user_id FROM accounts WHERE role='admin'"))
+        self.collect_garbage()
 
     @contextmanager
     def atomic(self):
@@ -109,7 +127,7 @@ class CloudStore(Store):
                 self.trim_snapshots()
 
     def snapshot(self, db):
-        payload = {"version": 1, "created": now(), "tables": {
+        payload = {"version": 2, "created": now(), "tables": {
             table: [dict(row) for row in db.execute('SELECT * FROM "' + table + '"')]
             for table in TABLES
         }}
@@ -140,7 +158,8 @@ class CloudStore(Store):
                 if hashlib.sha256(raw).hexdigest() != expected:
                     continue
                 payload = json.loads(raw)
-                if payload.get("version") != 1 or set(payload["tables"]) != set(TABLES):
+                expected_tables = LEGACY_TABLES if payload.get("version") == 1 else TABLES if payload.get("version") == 2 else ()
+                if not expected_tables or set(payload["tables"]) != set(expected_tables):
                     continue
                 with self.db() as db:
                     db.execute("DELETE FROM sessions")
@@ -149,7 +168,7 @@ class CloudStore(Store):
                     for table in reversed(TABLES):
                         db.execute('DELETE FROM "' + table + '"')
                     for table in TABLES:
-                        for row in payload["tables"][table]:
+                        for row in payload["tables"].get(table, []):
                             columns = list(row)
                             db.execute('INSERT INTO "' + table + '" (' + ",".join('"' + c + '"' for c in columns) + ') VALUES (' + ",".join("?" for _ in columns) + ")", tuple(row.values()))
                 return
@@ -168,6 +187,35 @@ class CloudStore(Store):
     def settings(self, user_id):
         row = self.one("SELECT * FROM accounts WHERE user_id=?", (user_id,))
         return dict(row) if row else {"user_id": user_id, "role": "user", "enabled": 1, "quota": USER_QUOTA}
+
+    def share_json(self, row):
+        result = super().share_json(row)
+        receipt = self.one("SELECT * FROM share_receipts WHERE share_id=?", (row["id"],))
+        if receipt:
+            result["receipt"] = {"downloadedAt": receipt["downloaded_at"], "savedAt": receipt["saved_at"]}
+            saved = self.one("SELECT id,deleted FROM files WHERE id=? AND ready=1 AND owner_id=?", (receipt["saved_file_id"], row["recipient_id"]))
+            result["receipt"]["savedFileId"] = saved["id"] if saved and not saved["deleted"] else None
+        return result
+
+    def queue_blob_deletion(self, file_id):
+        indices = [r["idx"] for r in self.all("SELECT idx FROM chunks WHERE file_id=?", (file_id,))]
+        self.execute("INSERT OR REPLACE INTO blob_garbage VALUES(?,?)", (file_id, json.dumps(indices)))
+
+    def delete_blobs(self, file_id, indices):
+        for path in self.blobs.glob(file_id + "-*.bin"):
+            if path.resolve().parent != self.blobs.resolve():
+                raise ValueError("Invalid ciphertext location")
+            path.unlink(missing_ok=True)
+
+    def collect_garbage(self):
+        # Run only after a durable metadata commit. Failures remain queued across restarts.
+        with self.lock:
+            for row in self.all("SELECT * FROM blob_garbage LIMIT 10"):
+                try:
+                    self.delete_blobs(row["file_id"], json.loads(row["indices"]))
+                    self.execute("DELETE FROM blob_garbage WHERE file_id=?", (row["file_id"],))
+                except Exception:
+                    break
 
     def public_user(self, row):
         result = super().public_user(row)

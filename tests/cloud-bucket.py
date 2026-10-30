@@ -43,5 +43,17 @@ with tempfile.TemporaryDirectory() as p:
     checks.append('Failed remote chunk uploads are not acknowledged or cached')
     assert len([k for k in api.objects if k.startswith('secretvault/metadata/')])<=3
     checks.append('Snapshot retention preserves the latest three remote versions')
+    api.fail=False
+    restart.chunk_path('f_copy',0).write_bytes(b'independent ciphertext')
+    restart.execute('INSERT INTO blob_garbage VALUES(?,?)',('f_test','[]'))
+    api.fail=True
+    restart.collect_garbage()
+    assert restart.one('SELECT COUNT(*) n FROM blob_garbage')['n']==1
+    api.fail=False
+    restart.collect_garbage()
+    assert 'secretvault/ciphertext/f_test-0.bin' not in api.objects
+    assert restart.chunk_path('f_copy',0).read_bytes()==b'independent ciphertext'
+    assert restart.one('SELECT COUNT(*) n FROM blob_garbage')['n']==0
+    checks.append('Deferred remote deletion retries failures and preserves independent copies')
 Path('audit/cloud-bucket-results.json').write_text(json.dumps({'passed':len(checks),'checks':checks},indent=2),encoding='utf8')
 print(json.dumps({'passed':len(checks)}))
