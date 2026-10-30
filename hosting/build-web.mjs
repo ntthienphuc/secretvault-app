@@ -6,6 +6,7 @@ for (const name of ["index.html","styles.css","favicon.svg","service.json","src/
   if(name.endsWith(".js")) execFileSync(process.execPath,["--check","web/"+name]);
 }
 const view=await readFile("web/src/view.js","utf8");
+await access("web/delivery.css");
 for(const term of ["fingerprint","ElGamal","DH-3072","Crypto Inspector","private key","public key"]) {
   if(view.toLowerCase().includes(term.toLowerCase())) throw new Error("Technical key material in normal product UI: "+term);
 }

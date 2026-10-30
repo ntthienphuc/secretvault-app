@@ -30,7 +30,7 @@ export function shell(s) {
   const pending = invitations(s);
   const account = s.remote.account || { used: 0, quota: 104857600 };
   const percent = Math.min(100, account.used / Math.max(account.quota, 1) * 100);
-  const mainNav = [["vault", "folder", "Tệp của tôi", 0], ["shared", "download", "Đã nhận", shared.length], ["live", "live", "Gửi trực tiếp", pending.length]];
+  const mainNav = [["vault", "folder", "Tệp của tôi", 0], ["shared", "download", "Đã nhận", shared.length], ["send", "share", "Gửi tệp", pending.length]];
   return `<div class="app-shell">
     <aside class="sidebar">
       ${brand()}
@@ -45,9 +45,9 @@ export function shell(s) {
       </div>
     </aside>
     <div class="workspace">
-      <header class="topbar"><span class="workspace-label">${icon("shield")} Không gian riêng tư</span><span class="mobile-brand">SecretVault</span><div class="topbar-right"><span class="connection ${s.connected ? "" : "offline"}"><i></i>${s.connected ? "Đã kết nối" : "Đang kết nối lại…"}</span></div></header>
+      <header class="topbar"><span class="workspace-label">${icon("shield")} Không gian riêng tư</span><span class="mobile-brand">SecretVault</span><div class="topbar-right"><span class="connection ${s.connected ? "" : "offline"}"><i></i>${s.connected ? "Đã kết nối" : "Đang kết nối lại…"}</span>${notifications(s)}</div></header>
       <main class="page" id="main-content" tabindex="-1">
-        ${pending.length && s.view !== "live" ? `<aside class="incoming-banner" role="status"><span class="incoming-symbol">${icon("download")}</span><div><strong>Bạn có ${pending.length} lời mời nhận tệp</strong><span>Mở để xác nhận và tải tệp từ người gửi.</span></div><button type="button" class="button secondary" data-view="live">Xem lời mời ${icon("chevron")}</button></aside>` : ""}
+        ${pending.length && !(s.view === "send" && s.sendMode === "live") ? `<aside class="incoming-banner" role="status"><span class="incoming-symbol">${icon("download")}</span><div><strong>Bạn có ${pending.length} lời mời nhận trực tiếp</strong><span>Mở để xác nhận và tải tệp từ người gửi.</span></div><button type="button" class="button secondary" data-view="live">Xem lời mời ${icon("chevron")}</button></aside>` : ""}
         ${page(s)}
       </main>
       <footer class="workspace-footer">${icon("lock")} Nội dung được bảo vệ trên thiết bị của bạn.</footer>
@@ -59,7 +59,7 @@ export function shell(s) {
 function page(s) {
   if (s.view === "trash") return trash(s);
   if (s.view === "contacts") return contacts(s);
-  if (s.view === "live") return live(s);
+  if (s.view === "send" || s.view === "live") return s.sendMode === "offline" ? offline(s) : live(s);
   if (s.view === "settings") return settings(s);
   if (s.view === "admin") return admin(s);
   if (s.view === "setup") return setup(s);
@@ -69,7 +69,7 @@ function page(s) {
 function uploadHero(s) {
   const recent = s.remote.files.find(f => f.id === s.recentUploadId && f.ownerId === s.user.id);
   return recent ? `<section class="upload-hero upload-complete" aria-label="Tệp vừa tải lên">
-    <span class="hero-symbol success">${icon("circleCheck")}</span><div class="hero-copy"><span class="eyebrow">ĐÃ LƯU VÀO KHÔNG GIAN RIÊNG</span><h2>${esc(recent.manifest.name)}</h2><p>Chỉ bạn xem được. Gửi cho người khác khi bạn sẵn sàng.</p></div>
+    <span class="hero-symbol success">${icon("circleCheck")}</span><div class="hero-copy"><span class="eyebrow">ĐÃ LƯU TRONG TỆP CỦA TÔI</span><h2>${esc(recent.manifest.name)}</h2><p>Mở Chia sẻ để gửi tiếp hoặc xem ai đã nhận tệp.</p></div>
     <div class="hero-actions">${btn("Chia sẻ tệp", "share", `data-id="${recent.id}"`,true,"share")}<button type="button" class="text-button" data-action="upload">Tải thêm tệp</button></div>
   </section>` : `<section class="upload-hero" aria-label="Tải tệp lên">
     <span class="hero-symbol">${icon("upload")}</span><div class="hero-copy"><span class="eyebrow">LƯU RIÊNG. CHIA SẺ DỄ DÀNG.</span><h2>${s.remote.files.some(f => f.ownerId === s.user.id) ? "Tải lên. Sẵn sàng chia sẻ." : "Bắt đầu bằng một tệp."}</h2><p>Kéo thả vào đây, hoặc chọn từ thiết bị của bạn.</p><small>Tối đa 25 MiB mỗi tệp · Chỉ chia sẻ khi bạn cho phép</small></div>
@@ -85,7 +85,7 @@ function files(s) {
   if (s.fileType === "document") list = list.filter(f => /\.(pdf|docx?|txt|pptx?|xlsx?|csv|md)$/i.test(f.manifest.name));
   if (s.fileType === "image") list = list.filter(f => /\.(png|jpe?g|webp|gif|svg)$/i.test(f.manifest.name));
   list.sort((a,b) => s.sort === "name" ? a.manifest.name.localeCompare(b.manifest.name) : b.manifest.created-a.manifest.created);
-  return `${title("",shared ? "Tệp được gửi cho bạn" : "Tệp của tôi",shared ? "Mở và tải xuống. Người gửi không cần đang online." : `Chào ${esc(s.user.name.split(" ").pop())}, tài liệu của bạn ở đây.`)}
+  return `${title("",shared ? "Tệp được gửi cho bạn" : "Tệp của tôi",shared ? "Tải về thiết bị hoặc lưu một bản riêng vào kho của bạn." : `Chào ${esc(s.user.name.split(" ").pop())}, tài liệu của bạn ở đây.`)}
     ${!shared ? uploadHero(s) : ""}
     <section class="panel files-panel" aria-label="Danh sách tệp">
       <div class="files-toolbar"><h2>${shared ? "Đã nhận" : "Tất cả tệp"}<span class="count-badge">${all.length}</span></h2>
@@ -100,11 +100,12 @@ function files(s) {
 
 function fileRow(s,f,shared) {
   const count = s.remote.shares.filter(x=>x.fileId===f.id&&!x.revoked&&x.senderId===s.user.id).length;
-  const status = s.signatures.get(f.id) === false ? "Cần kiểm tra lại tệp" : shared ? `Từ ${esc(peer(s,f.ownerId)?.name||"Người gửi")}` : count ? `Đã chia sẻ · ${count} người` : "Chỉ mình bạn";
+  const received = s.remote.shares.filter(x=>x.fileId===f.id&&!x.revoked&&(x.receipt?.savedAt||x.receipt?.downloadedAt)).length;
+  const status = s.signatures.get(f.id) === false ? "Cần kiểm tra lại tệp" : shared ? `Từ ${esc(peer(s,f.ownerId)?.name||"Người gửi")} · ${receiptLabel(f.share)}` : count ? `Đã nhận ${received}/${count} người` : "Chỉ mình bạn";
   return `<article class="file-row ${s.recentUploadId===f.id?"recent-file":""}">
     <div class="file-name">${badge(f.manifest.name)}<div><strong title="${esc(f.manifest.name)}">${esc(f.manifest.name)}</strong><small><span class="mobile-file-size">${size(f.manifest.size)} · </span>${status}</small></div></div>
     <span class="file-date">${shared?esc(peer(s,f.ownerId)?.name||"Người gửi"):date(f.manifest.created)}</span><span class="file-size">${size(f.manifest.size)}</span>
-    <div class="file-actions">${shared ? btn("Tải xuống","download",`data-id="${f.id}" aria-label="Tải ${esc(f.manifest.name)}"`,false,"download") : `${btn("Chia sẻ","share",`data-id="${f.id}" aria-label="Chia sẻ ${esc(f.manifest.name)}"`,false,"share")}
+    <div class="file-actions">${shared ? btn("Nhận tệp","receive-file",`data-id="${f.id}" aria-label="Nhận ${esc(f.manifest.name)}"`,false,"download") : `${btn("Chia sẻ","share",`data-id="${f.id}" aria-label="Chia sẻ ${esc(f.manifest.name)}"`,false,"share")}
       <details class="file-menu" id="menu-${f.id}"><summary id="menu-toggle-${f.id}" class="icon-button" aria-label="Thêm thao tác với ${esc(f.manifest.name)}">${icon("more")}</summary><div class="options-popover file-popover"><button type="button" data-action="download" data-id="${f.id}">${icon("download")} Tải xuống</button><button type="button" class="danger-text" data-action="trash-file" data-id="${f.id}">${icon("trash")} Chuyển vào thùng rác</button></div></details>`}</div>
   </article>`;
 }
@@ -124,21 +125,44 @@ function transferCard(s,item) {
   return `<article class="panel transfer-card ${receiver&&item.state==="offered"?"needs-action":""}"><div class="transfer-title">${badge(item.offer.name)}<div><strong>${esc(item.offer.name)}</strong><small>${receiver?"Từ":"Gửi đến"} ${esc(user?.name||"Người dùng")} · ${size(item.offer.size)}</small></div><span class="status-chip ${item.state==="complete"?"success":""}">${labels[item.state]||esc(item.state)}</span></div><div class="transfer-bottom"><span class="muted">${item.expires>Date.now()&&!["complete","rejected"].includes(item.state)?`Giữ trang mở · Hết hạn ${new Date(item.expires).toLocaleTimeString("vi",{hour:"2-digit",minute:"2-digit"})}`:"Phiên đã kết thúc"}</span><div class="button-row">${receiver&&item.state==="offered"?btn("Từ chối","reject-live",`data-id="${item.id}"`)+btn("Nhận tệp","accept-live",`data-id="${item.id}"`,true,"check"):""}${receiver&&item.state==="sent"&&memory?btn("Tải xuống","receive-live",`data-id="${item.id}"`,true,"download"):""}${(receiver?["accepted","sent"].includes(item.state):item.state==="accepted")&&!memory?'<small class="form-hint">Phiên trên thiết bị này đã đóng. Hãy tạo lời mời mới.</small>':""}</div></div></article>`;
 }
 
+const receiptLabel = share => share?.receipt?.savedAt ? "Đã lưu vào kho" : share?.receipt?.downloadedAt ? "Đã nhận để tải" : "Chờ người nhận";
+
+function notifications(s) {
+  const items = s.remote.notifications || [];
+  const unread = items.filter(n => !n.read_at).length;
+  return `<details class="notification-menu" id="notifications"><summary id="notification-toggle" class="icon-button" aria-label="Thông báo${unread ? `, ${unread} chưa đọc` : ""}">${icon("bell")}${unread ? `<span class="notification-count">${unread}</span>` : ""}</summary><section class="notification-panel" aria-label="Thông báo nhận tệp"><div class="notification-heading"><h2>Thông báo</h2>${unread ? btn("Đánh dấu đã đọc","notifications-read") : ""}</div>${items.length ? items.map(n=>`<article class="${n.read_at ? "" : "unread"}">${icon(n.kind === "saved" ? "folder" : "download")}<div><p>${esc(n.message)}</p><small>${date(n.created)}</small>${s.remote.files.some(f=>f.id===n.file_id&&f.ownerId===s.user.id) ? `<button type="button" class="text-button" data-action="show-file" data-id="${n.file_id}">Xem tệp</button>` : ""}</div></article>`).join("") : '<p class="notification-empty">Khi người nhận tải hoặc lưu tệp, xác nhận sẽ xuất hiện ở đây.</p>'}</section></details>`;
+}
+
+function sendHeader(s) {
+  return `${title("","Gửi tệp","Chọn cách phù hợp với thời điểm người nhận có mặt.")}<div class="send-modes" role="tablist" aria-label="Cách gửi tệp">${[["live","live","Gửi trực tiếp","Cả hai cùng online"],["offline","clock","Gửi để nhận sau","Người nhận có thể offline"]].map(([mode,glyph,label,hint])=>`<button type="button" role="tab" id="send-tab-${mode}" aria-controls="send-content" aria-selected="${s.sendMode===mode}" tabindex="${s.sendMode===mode?0:-1}" data-action="send-mode" data-mode="${mode}" class="${s.sendMode===mode?"active":""}">${icon(glyph)}<span><strong>${label}</strong><small>${hint}</small></span></button>`).join("")}</div>`;
+}
+
+function sendForm(s, offlineMode = false) {
+  const stored = s.remote.files.find(f=>f.id===s.sendStoredId&&f.ownerId===s.user.id);
+  const selected = offlineMode && stored ? stored.manifest : s.liveFile;
+  const account = s.remote.account || { used:0, allocated:0, quota:104857600 };
+  const remaining = Math.max(0, account.quota - (account.allocated ?? account.used));
+  const needed = selected ? selected.size + Math.max(1, Math.ceil(selected.size/1048576))*16 : 0;
+  const full = offlineMode && !stored && needed > remaining;
+  return `<section class="panel send-panel"><div class="send-panel-heading"><span class="section-symbol">${icon(offlineMode?"clock":"live")}</span><div><h2>${offlineMode?"Gửi hôm nay. Nhận bất cứ lúc nào.":"Kết nối và gửi ngay."}</h2><p class="muted">${offlineMode?"Tệp tự lưu vào Tệp của tôi trước khi gửi.":"Không lưu vào kho. Giữ cả hai trang mở đến khi nhận xong."}</p></div></div>
+    <form data-form="${offlineMode?"offline":"live"}" class="form-grid"><div class="step-label"><span>1</span> Chọn tệp</div><button class="drop-zone ${selected?"has-file":""}" type="button" data-action="choose-live"><span>${icon(selected?"file":"upload")}</span><strong>${selected?esc(selected.name):"Chọn tệp từ thiết bị"}</strong><small>${selected?size(selected.size)+(stored&&offlineMode?" · Đã có trong Tệp của tôi":" · Bấm để đổi tệp"):"Hoặc kéo thả vào đây · Tối đa 25 MiB"}</small></button>
+    ${offlineMode?`<details class="choose-stored" id="choose-stored"><summary>Hoặc chọn từ Tệp của tôi ${icon("chevronDown")}</summary><label class="field-label" for="send-existing">Tệp đã lưu<select id="send-existing" class="field-input"><option value="">Chọn một tệp…</option>${s.remote.files.filter(f=>f.ownerId===s.user.id).map(f=>`<option value="${f.id}" ${f.id===s.sendStoredId?"selected":""}>${esc(f.manifest.name)}</option>`).join("")}</select></label></details><div class="send-quota ${full?"quota-full":""}">${icon("cloud")}<span>${full?"Không đủ dung lượng. Dọn Thùng rác hoặc chọn tệp nhỏ hơn.":`Còn ${size(remaining)} / ${size(account.quota)} trong kho của bạn.`}</span></div>`:""}
+    <label class="field-label" for="send-email"><span class="step-label"><span>2</span> Người nhận</span><input id="send-email" class="field-input" type="email" list="send-contacts" placeholder="nguoinhan@example.com" value="${esc(s.sendEmail)}" required/></label>${contactOptions(s,"send-contacts")}
+    <button type="submit" class="button primary send-submit" ${s.busy||!selected||full?"disabled":""}>${icon(offlineMode?"share":"live")} ${offlineMode?"Gửi tệp":"Gửi lời mời"}</button><p class="form-hint">${offlineMode?"Bạn có thể đóng app sau khi gửi thành công. Có thông báo khi người nhận tải hoặc lưu tệp.":"Nếu người nhận offline, app chuyển sang tab nhận sau và giữ tệp đã chọn."}</p></form></section>`;
+}
+
+function offline(s) {
+  const result = s.sendResult;
+  return `${sendHeader(s)}<div id="send-content" role="tabpanel" aria-labelledby="send-tab-offline">${s.sendNotice?`<aside class="send-notice" role="status">${icon("info")}<p>${esc(s.sendNotice)}</p></aside>`:""}${result?`<section class="panel send-panel send-success"><span class="section-symbol success">${icon("circleCheck")}</span><h2>Đã gửi để nhận sau</h2><p><strong>${esc(result.recipient)}</strong> sẽ thấy <strong>${esc(result.name)}</strong> trong mục Đã nhận.</p><p class="muted">Tệp cũng đã nằm trong Tệp của tôi. Xác nhận nhận tệp sẽ xuất hiện ở chuông thông báo.</p><div class="button-row">${btn("Gửi tệp khác","send-another","",true,"plus")}${btn("Xem trong Tệp của tôi","show-file",`data-id="${result.id}"`)}</div></section>`:sendForm(s,true)}</div>`;
+}
+
 function live(s) {
   const active = s.remote.live.filter(x=>["offered","accepted","sent"].includes(x.state)).sort((a,b)=>Number(b.recipientId===s.user.id)-Number(a.recipientId===s.user.id));
   const history = s.remote.live.filter(x=>!["offered","accepted","sent"].includes(x.state));
-  return `${title("","Gửi trực tiếp","Cả hai cùng mở SecretVault. Người nhận xác nhận trước khi bạn gửi.")}
+  return `${sendHeader(s)}<div id="send-content" role="tabpanel" aria-labelledby="send-tab-live">
     ${active.length?`<section class="active-transfers" aria-label="Phiên đang diễn ra"><h2>Đang diễn ra<span class="count-badge">${active.length}</span></h2><div class="transfer-stack">${active.map(x=>transferCard(s,x)).join("")}</div></section>`:""}
-    <section class="panel send-panel"><div class="send-panel-heading"><span class="section-symbol">${icon("live")}</span><div><h2>Gửi một tệp mới</h2><p class="muted">Chọn tệp, nhập email, gửi lời mời.</p></div></div>
-      <form data-form="live" class="form-grid">
-        <div class="step-label"><span>1</span> Chọn tệp</div><button class="drop-zone ${s.liveFile?"has-file":""}" type="button" data-action="choose-live"><span>${icon(s.liveFile?"file":"upload")}</span><strong>${s.liveFile?esc(s.liveFile.name):"Chọn tệp từ thiết bị"}</strong><small>${s.liveFile?size(s.liveFile.size)+" · Bấm để đổi tệp":"Hoặc kéo thả vào đây · Tối đa 25 MiB"}</small></button>
-        <label class="field-label" for="live-email"><span class="step-label"><span>2</span> Người nhận</span><input id="live-email" class="field-input" type="email" list="live-contacts" placeholder="nguoinhan@example.com" required/></label>${contactOptions(s,"live-contacts")}
-        <button type="submit" class="button primary send-submit" ${s.busy||!s.liveFile?"disabled":""}>${icon("live")} Gửi lời mời</button>
-        <p class="form-hint">Người nhận cần đang online. Giữ trang mở cho đến khi hiện “Đã nhận”.</p>
-      </form>
-    </section>
-    <aside class="live-alternative">${icon("clock")}<div><strong>Người nhận sẽ mở sau?</strong><p>Tải tệp vào Tệp của tôi, rồi chọn Chia sẻ.</p></div><button type="button" class="text-button" data-view="vault">Về tệp của tôi ${icon("chevron")}</button></aside>
-    ${history.length?`<details class="transfer-history" id="transfer-history"><summary>Phiên trước đây <span class="count-badge">${history.length}</span>${icon("chevron")}</summary><div class="transfer-stack">${history.map(x=>transferCard(s,x)).join("")}</div></details>`:""}`;
+    ${sendForm(s)}
+    ${history.length?`<details class="transfer-history" id="transfer-history"><summary>Phiên trước đây <span class="count-badge">${history.length}</span>${icon("chevron")}</summary><div class="transfer-stack">${history.map(x=>transferCard(s,x)).join("")}</div></details>`:""}</div>`;
 }
 
 function settings(s) {
@@ -150,29 +174,51 @@ function settings(s) {
 
 function trash(s) {
   return `${title("","Thùng rác","Tệp ở đây vẫn tính vào dung lượng. Khôi phục cũng mở lại các quyền chia sẻ chưa thu hồi.")}
-    <section class="panel">${s.trash===null?empty("trash","Đang mở thùng rác","Danh sách sẽ xuất hiện trong giây lát."):s.trash.length?`<div class="panel-padding trash-list">${s.trash.map(f=>`<div class="trash-row">${badge(f.name)}<span><strong>${esc(f.name)}</strong><small>${size(f.size)}</small></span>${btn("Khôi phục","restore-file",`data-id="${f.id}"`,false,"refresh")}</div>`).join("")}</div>`:empty("trash","Thùng rác đang trống","Tệp bạn chuyển vào thùng rác sẽ xuất hiện tại đây.",'<button type="button" class="button secondary" data-view="vault">Về tệp của tôi</button>')}</section>`;
+    <section class="panel">${s.trash===null?empty("trash","Đang mở thùng rác","Danh sách sẽ xuất hiện trong giây lát."):s.trash.length?`<div class="panel-padding trash-list">${s.trash.map(f=>`<div class="trash-row">${badge(f.name)}<span><strong>${esc(f.name)}</strong><small>${size(f.size)}</small></span><div class="trash-actions">${btn("Khôi phục","restore-file",`data-id="${f.id}"`,false,"refresh")}${btn("Xóa vĩnh viễn","purge-file",`data-id="${f.id}"`,false,"trash")}</div></div>`).join("")}</div>`:empty("trash","Thùng rác đang trống","Tệp bạn chuyển vào thùng rác sẽ xuất hiện tại đây.",'<button type="button" class="button secondary" data-view="vault">Về tệp của tôi</button>')}</section>`;
 }
 
 function modal(s) {
   if (!s.modal) return "";
+  if (s.modal.type === "purge") {
+    const item = s.trash?.find(f=>f.id===s.modal.id);
+    if (!item) return "";
+    return dialogFrame(`${icon("trash")}<h2 id="modal-title">Xóa vĩnh viễn?</h2><p><strong>${esc(item.name)}</strong> sẽ bị xóa khỏi kho của bạn và giải phóng dung lượng. Không thể khôi phục.</p><p class="form-hint">Người nhận không thể tải lại từ bản này. Bản họ đã tải về hoặc lưu riêng vẫn còn.</p><div class="button-row">${btn("Giữ lại","close-modal")}${btn("Xóa vĩnh viễn","confirm-purge",`data-id="${item.id}"`,true,"trash")}</div>`);
+  }
   const f=s.remote.files.find(f=>f.id===s.modal.id);
   if (!f) return "";
   const shares=s.remote.shares.filter(x=>x.fileId===f.id&&!x.revoked&&x.senderId===s.user.id);
+  if (s.modal.type === "trash") {
+    const saved = shares.filter(x=>x.receipt?.savedAt).length;
+    const received = shares.filter(x=>x.receipt?.savedAt||x.receipt?.downloadedAt).length;
+    return dialogFrame(`<h2 id="modal-title">Chuyển vào thùng rác?</h2><div class="modal-file">${badge(f.manifest.name)}<strong>${esc(f.manifest.name)}</strong></div>${shares.length?`<p>${received}/${shares.length} người đã nhận, ${saved} người đã lưu vào kho riêng.</p>`:""}<p class="muted">Quyền tải từ bản này sẽ tạm dừng. Bản người nhận đã tải hoặc lưu riêng vẫn còn.</p><p class="form-hint">Bạn có thể khôi phục. Muốn giải phóng dung lượng, xóa vĩnh viễn trong Thùng rác.</p><div class="button-row">${btn("Giữ lại","close-modal")}${btn("Chuyển vào thùng rác","confirm-trash",`data-id="${f.id}"`,true,"trash")}</div>`);
+  }
+  if (s.modal.type === "receive") {
+    const saved = f.share?.receipt?.savedFileId;
+    const account = s.remote.account || {used:0,quota:104857600};
+    const remaining = Math.max(0,account.quota-(account.allocated??account.used));
+    const needed = f.manifest.size+Math.max(1,Math.ceil(f.manifest.size/1048576))*16;
+    const full = !saved && needed > remaining;
+    return dialogFrame(`<span class="section-symbol">${icon("download")}</span><h2 id="modal-title">Bạn muốn nhận tệp thế nào?</h2><p class="muted">Từ ${esc(peer(s,f.ownerId)?.name||"người gửi")}</p><div class="modal-file">${badge(f.manifest.name)}<div><strong>${esc(f.manifest.name)}</strong><small>${size(f.manifest.size)}</small></div></div><div class="receive-choices"><button type="button" class="receive-choice" data-action="download" data-id="${f.id}">${icon("download")}<span><strong>Tải về thiết bị</strong><small>Không dùng dung lượng kho SecretVault.</small></span>${icon("chevron")}</button><button type="button" class="receive-choice" data-action="${saved?"show-saved":"save-received"}" data-id="${saved||f.id}" ${full?"disabled":""}>${icon("folder")}<span><strong>${saved?"Mở bản đã lưu":"Lưu vào Tệp của tôi"}</strong><small>${saved?"Bản riêng của bạn đã sẵn sàng.":full?"Kho không đủ dung lượng. Bạn vẫn có thể tải về thiết bị.":`Dùng ${size(f.manifest.size)} · Còn ${size(remaining)} trong kho.`}</small></span>${icon("chevron")}</button></div><p class="form-hint">Lưu vào kho tạo bản riêng: người gửi xóa bản gốc thì bạn vẫn giữ được tệp. Người gửi được thông báo sau khi app nhận và kiểm tra tệp thành công.</p>`);
+  }
   const sent=s.modal.type === "sent";
   return `<div class="modal-layer" data-action="close-modal"><section class="modal ${sent?"share-sent":""}" role="dialog" aria-modal="true" aria-labelledby="modal-title"><button type="button" class="icon-button modal-close" data-action="close-modal" aria-label="Đóng">${icon("close")}</button>
     <span class="section-symbol ${sent?"success":""}">${icon(sent?"circleCheck":"share")}</span><h2 id="modal-title">${sent?"Đã chia sẻ tệp":"Bạn muốn gửi cho ai?"}</h2>
     <p class="muted">${sent?`${esc(s.modal.recipient.name)} có thể mở tệp trong mục <strong>Đã nhận</strong>.`:'Người nhận mở tệp bất cứ lúc nào, kể cả khi bạn offline.'}</p>
     <div class="modal-file">${badge(f.manifest.name)}<div><strong>${esc(f.manifest.name)}</strong><small>${size(f.manifest.size)}</small></div></div>
     ${sent?`<p class="sent-recipient">${icon("contacts")}${esc(s.modal.recipient.email)}</p><button type="button" class="button primary full-width" data-action="close-modal">Xong</button>`:`<form data-form="share" data-id="${f.id}" class="form-grid"><input id="share-recipient" type="hidden" value=""/><label class="field-label" for="share-email">Email người nhận<input class="field-input" id="share-email" type="email" list="share-contacts" placeholder="nguoinhan@example.com" required data-autofocus/></label>${contactOptions(s,"share-contacts")}<p class="form-hint">Nhập email đã đăng ký SecretVault. Không cần thêm danh bạ trước.</p><button type="submit" class="button primary" ${s.busy?"disabled":""}>${icon("share")} Gửi tệp</button></form>
-      ${shares.length?`<details class="share-access" id="share-access"><summary>Ai có quyền xem <span class="count-badge">${shares.length}</span>${icon("chevron")}</summary>${shares.map(x=>`<div><span><strong>${esc(peer(s,x.recipientId)?.name||"Người nhận")}</strong><small>${esc(peer(s,x.recipientId)?.email||"")}</small></span>${btn("Thu hồi","revoke",`data-id="${x.id}"`)}</div>`).join("")}<p class="form-hint">Thu hồi chặn lần tải tiếp theo. Người nhận vẫn giữ được bản đã tải.</p></details>`:""}`}
+      ${shares.length?`<details class="share-access" id="share-access"><summary>Ai có quyền xem <span class="count-badge">${shares.length}</span>${icon("chevron")}</summary>${shares.map(x=>`<div><span><strong>${esc(peer(s,x.recipientId)?.name||"Người nhận")}</strong><small>${esc(peer(s,x.recipientId)?.email||"")}</small><small class="receipt-state">${receiptLabel(x)}</small></span>${btn("Thu hồi","revoke",`data-id="${x.id}"`)}</div>`).join("")}<p class="form-hint">Thu hồi chặn lần tải tiếp theo. Bản người nhận đã tải hoặc lưu riêng vẫn còn.</p></details>`:""}`}
   </section></div>`;
+}
+
+function dialogFrame(content) {
+  return `<div class="modal-layer" data-action="close-modal"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><button type="button" class="icon-button modal-close" data-action="close-modal" aria-label="Đóng">${icon("close")}</button>${content}</section></div>`;
 }
 
 function admin(s) {
   if(s.user.role!=="admin") return empty("shield","Khu vực dành cho quản trị viên","Tài khoản của bạn không có quyền truy cập bảng điều khiển này.",'<button class="button primary" data-view="vault">Về không gian của tôi</button>');
   const a=s.admin;
   if(!a) return `${title("SECRET VAULT ADMIN","Tổng quan vận hành.","Đang tải dữ liệu hệ thống…",btn("Tải dữ liệu","admin-refresh","",true,"refresh"))}`;
-  const kinds={"account.created":"Tạo tài khoản","account.login":"Đăng nhập","admin.activated":"Kích hoạt quản trị","account.updated":"Cập nhật tài khoản","file.uploaded":"Tải tệp lên","file.restored":"Khôi phục tệp","transfer.invited":"Gửi lời mời","transfer.accept":"Chấp nhận lời mời","transfer.finish":"Đã chuyển tệp","transfer.ack":"Người nhận đã nhận","transfer.reject":"Từ chối lời mời"};
+  const kinds={"share.saved":"Người nhận lưu bản riêng","share.downloaded":"Người nhận chuẩn bị tải","file.deleted":"Xóa vĩnh viễn","account.created":"Tạo tài khoản","account.login":"Đăng nhập","admin.activated":"Kích hoạt quản trị","account.updated":"Cập nhật tài khoản","file.uploaded":"Tải tệp lên","file.restored":"Khôi phục tệp","transfer.invited":"Gửi lời mời","transfer.accept":"Chấp nhận lời mời","transfer.finish":"Đã chuyển tệp","transfer.ack":"Người nhận đã nhận","transfer.reject":"Từ chối lời mời"};
   return `${title("SECRET VAULT ADMIN","Tổng quan vận hành.","Theo dõi tài khoản, lưu trữ và quá trình chuyển tệp.",btn("Cập nhật","admin-refresh","",true,"refresh"))}<div class="admin-stats">${[["contacts","Tài khoản",a.summary.users,`${a.summary.online} đang online`],["folder","Tệp sẵn sàng",a.summary.files,`${a.summary.shares} quyền chia sẻ`],["live","Phiên đang mở",a.summary.activeTransfers,"Lời mời và tệp đang chuyển"],["server","Dung lượng đã lưu",size(a.storage.used),`Giới hạn ${size(a.storage.quota)}`]].map(([g,l,v,t])=>`<article class="panel stat-card"><span>${icon(g)}</span><small>${l}</small><strong>${v}</strong><p>${t}</p></article>`).join("")}</div><section class="panel section"><div class="section-head"><h2>Tài khoản & hạn mức</h2><span class="status-chip success">${icon("shield")} Quyền được kiểm tra tại server</span></div><div class="table-scroll"><table class="admin-table"><thead><tr><th>Người dùng</th><th>Trạng thái</th><th>Lưu trữ</th><th>Hạn mức</th><th>Quản lý</th></tr></thead><tbody>${a.users.map(u=>`<tr><td><strong>${esc(u.name)} ${u.role==="admin"?'<span class="mini-badge">Admin</span>':""}</strong><small>${esc(u.email)}</small></td><td><span class="status-chip ${u.enabled?"success":""}">${u.enabled?u.online?"Đang online":"Hoạt động":"Tạm dừng"}</span></td><td>${size(u.used)}<small>${u.reserved?size(u.reserved)+" đang tải":""}</small></td><td><form data-form="admin-quota" data-id="${u.id}" class="inline-form"><select id="quota-${u.id}" aria-label="Hạn mức ${esc(u.name)}">${[...new Set([u.quota/1048576,25,50,100,200,512])].sort((a,b)=>a-b).map(n=>`<option value="${n*1048576}" ${u.quota===n*1048576?"selected":""}>${n} MiB</option>`).join("")}</select><button class="icon-button" aria-label="Lưu hạn mức ${esc(u.name)}">${icon("check")}</button></form></td><td>${u.id!==s.user.id?btn(u.enabled?"Tạm dừng":"Mở lại","admin-toggle",`data-id="${u.id}" data-enabled="${!u.enabled}"`):'<span class="muted">Bạn</span>'}</td></tr>`).join("")}</tbody></table></div></section><div class="two-col section"><section class="panel"><div class="section-head"><h2>Quá trình xử lý gần đây</h2></div><div class="admin-events">${a.events.length?a.events.map(e=>`<article><span class="event-dot"></span><div><strong>${kinds[e.kind]||esc(e.kind)}</strong><p>${esc(e.actor||"Hệ thống")} · ${esc(e.subject)}</p><small>${date(e.created)}${e.detail?" · "+esc(e.detail):""}</small></div></article>`).join(""):'<p class="muted">Chưa có hoạt động.</p>'}</div></section><section class="panel"><div class="section-head"><h2>Tệp & tiến độ</h2></div><div class="admin-file-list">${a.files.length?a.files.map(f=>`<article>${badge(f.name)}<div><strong>${esc(f.name)}</strong><small>${esc(f.owner)} · ${size(f.size)}</small></div><span class="status-chip ${f.state==="ready"?"success":""}">${f.state==="ready"?"Sẵn sàng":f.state==="trash"?"Thùng rác":`${Math.min(99,Math.round(f.stored/Math.max(f.size,1)*100))}%`}</span></article>`).join(""):empty("folder","Chưa có tệp","Tệp mới sẽ xuất hiện sau khi tải lên.")}</div></section></div><div class="service-strip">${icon("server")} Backend Python · v${esc(a.service.version)}<span>${esc(a.service.persistence)}</span><span>Tối đa ${a.service.maxUsers} tài khoản · ${size(a.service.maxFileSize)}/tệp</span></div>`;
 }
 

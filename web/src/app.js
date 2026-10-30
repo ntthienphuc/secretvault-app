@@ -14,6 +14,8 @@ const state = {
   remote: { users: [], contacts: [], files: [], shares: [], live: [], activity: [] },
   view: location.pathname === "/admin" ? "admin" : location.pathname === "/setup" ? "setup" : "vault", search: "", busy: "", modal: null, candidate: null, admin: null, trash: null,
   liveFile: null, recentUploadId: null, connected: true, remoteHash: "", signatures: new Map(), verified: new Map(),
+  sendMode: "live", sendEmail: "", sendStoredId: null, sendNotice: "", sendResult: null,
+  notificationIds: null,
   incoming: new Map(), outgoing: new Map(), sending: new Set(), polling: false,
   fileType: "all", layout: localStorage.getItem("sv2-layout") || "list", sort: "newest",
 };
@@ -25,7 +27,7 @@ function render() {
   const openDetails = [...root.querySelectorAll("details[open][id]")].map(item => item.id);
   const values = new Map();
   for (const input of root.querySelectorAll("input[id],select[id]")) {
-    if (!["password", "file"].includes(input.type) && !["search", "file-type", "file-sort"].includes(input.id)) {
+    if (!["password", "file"].includes(input.type) && !["search", "file-type", "file-sort", "send-email", "send-existing"].includes(input.id)) {
       values.set(input.id, input.value);
     }
   }
@@ -128,6 +130,11 @@ async function refresh(force = false) {
   if (!current() || !state.user) return;
   const changed = remoteHash !== state.remoteHash;
   state.remote = remote;
+  if (state.sendResult && !remote.files.some(f => f.id === state.sendResult.id)) state.sendResult = null;
+  if (state.sendStoredId && !remote.files.some(f => f.id === state.sendStoredId)) state.sendStoredId = null;
+  const notices = remote.notifications || [];
+  if (state.notificationIds) for (const item of notices.filter(n => !n.read_at && !state.notificationIds.has(n.id)).slice(0, 3)) toast(item.message);
+  state.notificationIds = new Set(notices.map(n => n.id));
   state.user = remote.user;
   state.connected = true;
   if (changed || force) {
@@ -234,13 +241,19 @@ async function logout() {
   state.outgoing.clear();
   state.liveFile = null;
   state.recentUploadId = null;
+  state.sendMode = "live";
+  state.sendEmail = "";
+  state.sendStoredId = null;
+  state.sendNotice = "";
+  state.sendResult = null;
+  state.notificationIds = null;
   state.authMode = "login";
   progress();
   render();
   await closing;
 }
 
-async function upload(file) {
+async function upload(file, { quiet = false, sourceShareId = null } = {}) {
   if (!file) {
     return;
   }
@@ -253,8 +266,15 @@ async function upload(file) {
   const total = Math.max(1, Math.ceil(file.size / C.CHUNK_SIZE));
   progress("Đang chuẩn bị tải lên · " + file.name);
   const chunks = [];
+  let allocated = false;
+  let committed = false;
   try {
-    await api.post("/api/files", { id: fileId, name: file.name, size: file.size });
+    const created = await api.post("/api/files", { id: fileId, name: file.name, size: file.size, ...(sourceShareId ? { sourceShareId } : {}) });
+    if (created.alreadySaved) {
+      await refresh(true);
+      return created.id;
+    }
+    allocated = true;
     for (let index = 0; index < total; index += 1) {
       progress(`Đang tải lên ${Math.round(index / total * 100)}% · ${file.name}`);
       const plaintext = new Uint8Array(await file.slice(index * C.CHUNK_SIZE, (index + 1) * C.CHUNK_SIZE).arrayBuffer());
@@ -276,12 +296,23 @@ async function upload(file) {
       manifest, signature: await C.sign(state.identity, manifest),
       ownerWrap: await C.wrapOwner(state.identity, fileId, ownerId, key),
     });
-    state.recentUploadId = fileId;
-    state.view = "vault";
-    state.search = "";
-    state.fileType = "all";
+    committed = true;
+    if (!quiet) {
+      state.recentUploadId = fileId;
+      state.view = "vault";
+      state.search = "";
+      state.fileType = "all";
+    }
     await refresh(true);
-    toast("Đã tải lên " + file.name);
+    if (!quiet) toast("Đã tải lên " + file.name);
+    return fileId;
+  } catch (error) {
+    if (allocated && !committed) {
+      // Only incomplete uploads can be aborted; a lost commit reply cannot delete a saved file.
+      await api.remove(`/api/files/${fileId}/upload`).catch(() => {});
+      await refresh(true).catch(() => {});
+    }
+    throw error;
   } finally {
     key.fill(0);
     progress();
@@ -312,6 +343,20 @@ function download(bytes, name, type = "application/octet-stream") {
 async function openFile(fileId, save) {
   const file = ownFile(fileId);
   C.assert(file, "Tệp không còn khả dụng; làm mới vault");
+  try {
+    const blob = await readFileBlob(file);
+    if (save) download(blob, file.manifest.name);
+    if (save && file.share) {
+      try { await api.post(`/api/shares/${file.share.id}/receipt`, { kind: "downloaded" }); }
+      catch { toast("Tệp đã sẵn sàng tải. Chưa gửi được xác nhận cho người gửi; bạn có thể thử tải lại.", true); }
+      await refresh(true);
+    }
+    toast(save ? "Tệp đã sẵn sàng: " + file.manifest.name : "Tệp đã được kiểm tra thành công.");
+  } finally { progress(); }
+}
+
+async function readFileBlob(file) {
+  const fileId = file.id;
   progress("Đang chuẩn bị tệp · " + file.manifest.name);
   const key = await fileKey(file);
   const plaintext = [];
@@ -330,24 +375,30 @@ async function openFile(fileId, save) {
       const raw = await C.decrypt(key, { iv: meta.iv, data: C.b64(ciphertext) }, C.fileAad(fileId, file.ownerId, index, manifest.chunks.length, manifest.size));
       C.assert(raw.length === meta.plainSize, "Độ dài sau giải mã không khớp");
       totalSize += raw.length;
-      if (save) {
-        plaintext.push(raw);
-      } else {
-        raw.fill(0);
-      }
+      plaintext.push(raw);
     }
     C.assert(totalSize === manifest.size, "Tệp bị thiếu nội dung");
     state.verified.set(fileId, Date.now());
-    if (save) {
-      download(new Blob(plaintext, { type: manifest.mime }), manifest.name);
-    }
-    toast(save ? "Tệp đã sẵn sàng: " + manifest.name : "Tệp đã được kiểm tra thành công.");
+    return new Blob(plaintext, { type: manifest.mime });
   } finally {
     for (const part of plaintext) part.fill(0);
     key.fill(0);
-    progress();
-    render();
   }
+}
+
+async function saveReceived(fileId) {
+  const file = ownFile(fileId);
+  C.assert(file?.share, "Tệp không còn khả dụng.");
+  const saved = file.share.receipt?.savedFileId;
+  if (saved && ownFile(saved)) {
+    state.modal = null; state.view = "vault"; state.recentUploadId = saved; render(); return;
+  }
+  try {
+    const blob = await readFileBlob(file);
+    const copyId = await upload(new File([blob], file.manifest.name, { type: file.manifest.mime }), { quiet: true, sourceShareId: file.share.id });
+    state.modal = null; state.view = "vault"; state.search = ""; state.fileType = "all"; state.recentUploadId = copyId;
+    toast("Đã lưu bản riêng vào Tệp của tôi và thông báo cho người gửi.");
+  } finally { progress(); }
 }
 
 async function shareFile(form) {
@@ -361,6 +412,15 @@ async function shareFile(form) {
   }
   C.assert(recipient, "Chọn người nhận trước");
   C.assert(recipient.id !== state.user.id, "Đây là tài khoản của bạn");
+  await shareTo(file, recipient);
+  state.modal = { type: "sent", id: file.id, recipient: { name: recipient.name, email: recipient.email } };
+  progress();
+}
+
+async function shareTo(file, recipient) {
+  C.assert(file?.ownerId === state.user.id, "Chọn tệp của bạn trước.");
+  const existing = state.remote.shares.find(s => s.fileId === file.id && s.recipientId === recipient.id && !s.revoked);
+  if (existing) return existing.id;
   progress("Đang chia sẻ tệp…");
   await checkPinned(recipient);
   const key = await fileKey(file);
@@ -371,14 +431,35 @@ async function shareFile(form) {
     };
     const envelope = await C.wrapElgamal(key, recipient.public.elgamal, context);
     const payload = { ...context, envelope, created: Date.now() };
-    await api.post("/api/shares", { payload, signature: await C.sign(state.identity, payload) });
-    state.modal = { type: "sent", id: file.id, recipient: { name: recipient.name, email: recipient.email } };
+    const result = await api.post("/api/shares", { payload, signature: await C.sign(state.identity, payload) });
     await refresh(true);
-    toast("Đã chia sẻ với " + recipient.name + ". Người nhận có thể mở tệp bất cứ lúc nào.");
+    return result.id;
   } finally {
     key.fill(0);
-    progress();
   }
+}
+
+async function sendOffline() {
+  C.assert(state.liveFile || state.sendStoredId, "Chọn một tệp trước.");
+  progress("Đang tìm người nhận…");
+  const recipient = await api.get("/api/directory?email=" + encodeURIComponent(state.sendEmail.trim().toLowerCase()));
+  C.assert(recipient.id !== state.user.id, "Đây là tài khoản của bạn");
+  if (!userById(recipient.id)) state.remote.users.push(recipient);
+  try {
+    if (!state.sendStoredId) state.sendStoredId = await upload(state.liveFile, { quiet: true });
+    progress("Đang gửi để nhận sau…");
+    const file = ownFile(state.sendStoredId);
+    await shareTo(file, recipient);
+    state.sendResult = { id: file.id, name: file.manifest.name, recipient: recipient.name };
+    state.liveFile = null; state.sendStoredId = null; state.sendNotice = "";
+  } finally { progress(); }
+}
+
+function switchToOffline() {
+  state.sendMode = "offline";
+  state.view = "send";
+  state.sendNotice = "Người nhận đang offline. Đã chuyển sang Gửi để nhận sau và giữ nguyên tệp, email. Bấm Gửi tệp khi bạn sẵn sàng.";
+  progress();
 }
 
 async function pinCandidate() {
@@ -394,14 +475,14 @@ async function pinCandidate() {
 
 async function startLive(form) {
   const file = state.liveFile;
-  const email = form.querySelector("#live-email").value.trim().toLowerCase();
+  const email = state.sendEmail.trim().toLowerCase();
   C.assert(file && email, "Chọn tệp và nhập email người nhận");
   C.assert(file.size <= (state.remote.limits?.maxFileSize || 25 * 1048576), "Mỗi tệp tối đa 25 MiB");
   progress("Đang tìm người nhận…");
   const recipient = await api.get("/api/directory?email=" + encodeURIComponent(email));
   C.assert(recipient.id !== state.user.id, "Đây là tài khoản của bạn");
   if (!userById(recipient.id)) state.remote.users.push(recipient);
-  C.assert(recipient.online, "Người nhận đang ngoại tuyến. Chia sẻ từ Tệp của tôi để họ mở sau, hoặc chờ họ online.");
+  if (!recipient.online) return switchToOffline();
   progress("Đang chuẩn bị lời mời…");
   await checkPinned(recipient);
   const pair = C.ephemeral();
@@ -417,6 +498,7 @@ async function startLive(form) {
     await api.post("/api/live", { payload: offer, signature: await C.sign(state.identity, offer) });
   } catch (error) {
     state.outgoing.delete(offer.id);
+    if (error.status === 409 && /offline/i.test(error.message)) return switchToOffline();
     throw error;
   }
   state.liveFile = null;
@@ -542,6 +624,7 @@ async function action(event) {
   if (nav) {
     if (state.busy) return toast("Chờ thao tác hiện tại hoàn tất.");
     state.view = nav.dataset.view;
+    if (state.view === "live") { state.view = "send"; state.sendMode = "live"; }
     state.search = "";
     state.fileType = "all";
     state.recentUploadId = null;
@@ -613,6 +696,34 @@ async function action(event) {
     } else {
       document.getElementById("upload-input").click();
     }
+  } else if (action === "send-mode") {
+    state.sendMode = element.dataset.mode;
+    state.sendNotice = ""; state.sendResult = null;
+    render();
+    root.querySelector('[data-action="send-mode"][data-mode="' + state.sendMode + '"]')?.focus();
+  } else if (action === "send-another") {
+    state.sendResult = null; render();
+  } else if (action === "notifications-read") {
+    await api.post("/api/notifications/read", { ids: (state.remote.notifications || []).filter(n => !n.read_at).map(n => n.id) });
+    await refresh(true);
+  } else if (action === "show-file" || action === "show-saved") {
+    state.modal = null;
+    state.view = "vault"; state.search = ""; state.fileType = "all"; state.recentUploadId = id;
+    root.querySelectorAll("details[open]").forEach(d => { d.open = false; });
+    render(); window.scrollTo({ top: 0, behavior: "instant" });
+  } else if (action === "receive-file") {
+    modalTrigger = '[data-action="receive-file"][data-id="' + id + '"]';
+    state.modal = { type: "receive", id }; render();
+  } else if (action === "save-received") {
+    await saveReceived(id);
+  } else if (action === "purge-file") {
+    state.modal = { type: "purge", id }; render();
+  } else if (action === "confirm-purge") {
+    progress("Đang xóa tệp và giải phóng dung lượng…");
+    await api.remove(`/api/files/${id}/purge`);
+    state.modal = null;
+    state.trash = (await api.get("/api/trash")).files;
+    await refresh(true); progress(); toast("Đã xóa vĩnh viễn bản của bạn và giải phóng dung lượng.");
   } else if (action === "choose-live") {
     event.preventDefault();
     document.getElementById("live-input").click();
@@ -651,8 +762,11 @@ async function action(event) {
   } else if (action === "new-tab") {
     window.open(location.origin, "_blank", "noopener");
   } else if (action === "trash-file") {
+    state.modal = { type: "trash", id }; render();
+  } else if (action === "confirm-trash") {
     progress("Đang chuyển tệp vào thùng rác…");
     await api.remove("/api/files/" + id);
+    state.modal = null;
     await refresh(true);
     progress();
     toast("Đã chuyển vào thùng rác. Mở Thùng rác để khôi phục.");
@@ -696,6 +810,8 @@ root.addEventListener("submit", (event) => {
       await shareFile(form);
     } else if (form.dataset.form === "live") {
       await startLive(form);
+    } else if (form.dataset.form === "offline") {
+      await sendOffline();
     } else if (form.dataset.form === "claim") {
       const code = form.querySelector("#claim-code").value;
       progress("Đang kích hoạt…");
@@ -718,6 +834,12 @@ root.addEventListener("submit", (event) => {
   task().catch(fail);
 });
 root.addEventListener("change", (event) => {
+  if (event.target.id === "send-existing") {
+    state.sendStoredId = event.target.value || null;
+    state.liveFile = null; state.sendResult = null;
+    root.querySelector("#choose-stored")?.removeAttribute("open");
+    render();
+  }
   if (event.target.id === "file-type") {
     state.fileType = event.target.value;
     root.querySelector(".filter-menu")?.removeAttribute("open");
@@ -738,6 +860,7 @@ root.addEventListener("change", (event) => {
   if (event.target.id === "live-input") {
     if (state.busy) return;
     state.liveFile = event.target.files[0];
+    state.sendStoredId = null; state.sendResult = null;
     render();
   }
 });
@@ -764,9 +887,10 @@ root.addEventListener("drop", (event) => {
     return;
   }
   const files = Array.from(event.dataTransfer?.files || []);
-  if (state.view === "live") {
-    if (files.length !== 1) return toast("Chọn một tệp cho mỗi lần gửi trực tiếp.", true);
+  if (state.view === "send") {
+    if (files.length !== 1) return toast("Chọn một tệp cho mỗi lần gửi.", true);
     state.liveFile = files[0];
+    state.sendStoredId = null; state.sendResult = null;
     render();
     return;
   }
@@ -777,6 +901,7 @@ root.addEventListener("drop", (event) => {
   (async () => { for (const file of files) await upload(file); })().catch(fail);
 });
 root.addEventListener("input", (event) => {
+  if (event.target.id === "send-email") state.sendEmail = event.target.value;
   if (event.target.id === "search") {
     state.search = event.target.value;
     render();
@@ -809,6 +934,12 @@ function updateService() {
 }
 checkService();
 document.addEventListener("keydown", (event) => {
+  if (event.target.matches?.('[data-action="send-mode"]') && ["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
+    event.preventDefault();
+    state.sendMode = event.key === "Home" ? "live" : event.key === "End" ? "offline" : state.sendMode === "live" ? "offline" : "live";
+    state.sendNotice = ""; state.sendResult = null; render();
+    root.querySelector('[data-mode="' + state.sendMode + '"]')?.focus();
+  }
   if (event.key === "Escape" && !state.modal) {
     root.querySelectorAll("details[open]").forEach(item => { item.open = false; item.querySelector("summary")?.focus(); });
   }
@@ -821,7 +952,7 @@ document.addEventListener("keydown", (event) => {
   }
 });
 document.addEventListener("click", event => {
-  root.querySelectorAll(".file-menu[open],.filter-menu[open]").forEach(item => {
+  root.querySelectorAll(".file-menu[open],.filter-menu[open],.notification-menu[open]").forEach(item => {
     if (!item.contains(event.target)) item.open = false;
   });
 });

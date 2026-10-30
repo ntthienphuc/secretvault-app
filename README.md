@@ -1,4 +1,4 @@
-# SecretVault Online 3.0.1
+# SecretVault Online — web/API 3.1.0
 
 Ứng dụng lưu trữ và chia sẻ tệp mã hóa với backend Python. Bản bàn giao hiện tại dùng chung dịch vụ online cho web, điện thoại và Windows. Không cần cùng Wi-Fi, mở cổng router hay cài Python trên máy người dùng.
 
@@ -9,7 +9,7 @@
 - **Windows x64:** bộ cài duy nhất trong `release/SecretVault-Online-Setup-3.0.1-x64.exe`.
 - **Gói bàn giao:** `deliverables/SecretVault_Online/`; tài liệu và slide nằm trong `Tai_lieu/`.
 
-Đăng ký bằng email và mật khẩu ít nhất 10 ký tự. Tải tệp vào **Tệp của tôi**, chọn **Chia sẻ**, nhập email tài khoản người nhận. Người nhận mở **Đã nhận** trên web hoặc app Windows. Gửi trực tiếp cần cả hai giữ app mở; chọn tệp và nhập email ngay trong màn hình gửi, không cần thêm danh bạ trước.
+Đăng ký bằng email và mật khẩu ít nhất 10 ký tự. Tải tệp vào **Tệp của tôi**, chọn **Chia sẻ**, nhập email tài khoản người nhận. Người nhận mở **Đã nhận** trên web hoặc app Windows. Mục **Gửi tệp** có hai tab trực tiếp và nhận sau. Tab nhận sau tự lưu vào kho trước khi chia sẻ; người nhận được chọn tải về hoặc lưu bản riêng. Chuông thông báo xác nhận đã nhận.
 
 Giao diện mới ngày 30/10 tập trung vào Tải tệp → Chia sẻ → Đã nhận. Menu **…** chứa tải xuống/thùng rác; bộ lọc nằm cạnh ô tìm kiếm. App Windows Online đang cài tự tải giao diện mới khi mở lại.
 
@@ -18,6 +18,7 @@ Mỗi tệp tối đa **25 MiB**, mỗi tài khoản mặc định **100 MiB**, 
 ## Tài liệu hiện hành
 
 - [Hướng dẫn người dùng](docs/HUONG_DAN_SU_DUNG.md)
+- [Hai cơ chế gửi, nhận và bản sao riêng](docs/SENDING_AND_RECEIPTS.md)
 - [Vận hành và kiến trúc Online](docs/CLOUD_ONLINE.md)
 - [Trạng thái và bằng chứng kiểm thử](docs/CLOUD_STATUS.md)
 - [Các thay đổi 3.0.1](docs/CHANGELOG.md)

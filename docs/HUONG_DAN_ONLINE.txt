@@ -11,12 +11,15 @@ Máy người dùng không cần cài Python, chứng chỉ hoặc chạy server
 2. Chờ dòng Đã kết nối an toàn. Máy chủ miễn phí có thể cần khoảng một phút.
 3. Tạo tài khoản bằng email và mật khẩu ít nhất 10 ký tự. Giữ mật khẩu:
    hiện chưa có khôi phục mật khẩu.
-4. Tải tệp vào Tệp của tôi; bấm Chia sẻ rồi nhập email người nhận đã có tài khoản.
-5. Người nhận mở Đã nhận và tải xuống. Người gửi có thể offline.
-6. Gửi trực tiếp: cả hai online, chọn tệp, nhập email, gửi lời mời, xác nhận, tải xuống.
-   Giữ app mở. Tải lại trang hoặc mất phiên cần tạo lời mời mới.
-7. Dấu … bên cạnh tệp: Tải xuống hoặc Chuyển vào thùng rác.
-   Thùng rác có thể khôi phục; vẫn tính dung lượng và khôi phục quyền chia sẻ cũ.
+4. Mở Gửi tệp: chọn Gửi trực tiếp hoặc Gửi để nhận sau.
+   Trực tiếp cần cả hai online. Người nhận offline thì app giữ tệp/email và
+   chuyển sang tab nhận sau; bấm Gửi tệp để xác nhận.
+5. Nhận sau tự lưu tệp vào Tệp của tôi của người gửi. Có thể chọn tệp đã có.
+6. Người nhận mở Đã nhận > Nhận tệp: Tải về thiết bị hoặc Lưu vào Tệp của tôi.
+   Bản đã lưu riêng vẫn còn nếu người gửi xóa bản gốc.
+7. Chuông Thông báo cho biết người nhận đã nhận để tải hoặc đã lưu vào kho.
+8. Dấu … cạnh tệp cho phép chuyển vào Thùng rác. Khôi phục nếu cần.
+   Xóa vĩnh viễn trong Thùng rác mới giải phóng dung lượng; có hộp xác nhận.
 
 25 MiB/tệp; mặc định 100 MiB/tài khoản. Toàn demo 512 MiB, tối đa 50 tài khoản.
 Sau giải mã, trình duyệt/app lưu tệp. Nếu chưa tải, bấm Lưu tệp ở thẻ hiện ra.

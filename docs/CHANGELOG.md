@@ -1,5 +1,16 @@
 # Thay đổi SecretVault
 
+## Web/API 3.1.0 ngày 30/10/2026
+
+- Hai tab gửi trực tiếp và nhận sau; tự chuyển tab khi người nhận offline, giữ tệp/email.
+- Gửi nhận sau tự lưu tệp vào kho và có thể tái dùng tệp đã lưu.
+- Người nhận chọn tải về hoặc tạo bản riêng có mã hóa mới trong hạn mức của họ.
+- Xác nhận nhận/lưu, thông báo bền vững, trạng thái từng người; không xác nhận chỉ vì mở danh sách.
+- Xóa vĩnh viễn từ Thùng rác giải phóng quota; dọn bản mã qua hàng đợi bền vững.
+- Snapshot v2 đọc được dữ liệu v1 cũ; không rollback về backend 3.0 sau migration.
+- App Windows Online vẫn dùng bộ cài 3.0.1 và tải web mới khi mở lại.
+
+
 ## Giao diện web cập nhật 30/10/2026
 
 - Tập trung ba luồng: Tệp của tôi, Đã nhận và Gửi trực tiếp; khu tải tệp nằm ở giữa nội dung và chuyển sang bước chia sẻ khi tải xong.
