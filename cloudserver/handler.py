@@ -11,7 +11,7 @@ import time
 from urllib.parse import urlparse
 
 from vaultserver.server import Handler
-from vaultserver.security import ApiError, CHUNK_SIZE, require, valid_id
+from vaultserver.security import ApiError, CHUNK_SIZE, require, valid_id, digest
 from vaultserver.store import now, canonical
 from . import VERSION
 from .store import FILE_LIMIT, TOTAL_QUOTA, USER_QUOTA
@@ -28,9 +28,21 @@ class CloudHandler(DeliveryMixin, Handler):
         pass
 
     def current_user(self):
+        auth = self.headers.get("Authorization", "")
+        if auth.startswith("Bearer "):
+            token_hash = digest(auth[7:].encode())
+            if not self.store.one("SELECT token_hash FROM sessions WHERE token_hash=? AND expires>?", (token_hash, now())):
+                remembered = self.store.one("SELECT * FROM remembered_sessions WHERE token_hash=? AND expires>?", (token_hash, now()))
+                if remembered:
+                    self.store.execute("INSERT OR REPLACE INTO sessions VALUES(?,?,?,?)", (token_hash, remembered["user_id"], remembered["expires"], now()))
         user = super().current_user()
         require(self.store.settings(user["id"])["enabled"], "Tài khoản tạm dừng. Liên hệ quản trị viên.", 403)
         return user
+
+    def authenticate(self, path, body):
+        require(type(body.get("remember", False)) is bool, "Lựa chọn ghi nhớ không hợp lệ.")
+        self._remember_login = body.get("remember", False)
+        return super().authenticate(path, body)
 
     def throttle(self, email):
         address = self.headers.get("X-SV-Remote-IP", self.client_address[0])
@@ -51,11 +63,19 @@ class CloudHandler(DeliveryMixin, Handler):
                 require(self.store.settings(user_id)["enabled"], "Tài khoản tạm dừng. Liên hệ quản trị viên.", 403)
                 self.store.execute("INSERT OR IGNORE INTO accounts VALUES(?,'user',1,?)", (user_id, USER_QUOTA))
                 self.store.event(user_id, "account.created" if path.endswith("register") else "account.login", data["user"]["name"])
+                token_hash = digest(data["token"].encode())
+                expires = now() + (7 * 24 if getattr(self, "_remember_login", False) else 12) * 3600000
+                self.store.execute("UPDATE sessions SET expires=? WHERE token_hash=?", (expires, token_hash))
+                if getattr(self, "_remember_login", False):
+                    self.store.execute("DELETE FROM remembered_sessions WHERE expires<=?", (now(),))
+                    self.store.execute("INSERT INTO remembered_sessions VALUES(?,?,?)", (token_hash, user_id, expires))
+                data["expiresAt"] = expires
+                data["remembered"] = bool(getattr(self, "_remember_login", False))
             if path == "/api/bootstrap" and "user" in data:
                 settings = self.store.settings(data["user"]["id"])
                 data["account"] = {"role": settings["role"], "quota": settings["quota"], **self.store.usage(data["user"]["id"])}
                 data["limits"] = {"maxFileSize": FILE_LIMIT, "chunkSize": CHUNK_SIZE}
-                data["features"] = {"offlineInbox": True}
+                data["features"] = {"offlineInbox": True, "rememberSession": True}
                 data["notifications"] = [dict(row) for row in self.store.all("SELECT id,file_id,kind,message,created,read_at FROM notifications WHERE user_id=? ORDER BY created DESC LIMIT 50", (data["user"]["id"],))]
                 # Friendly product activity rather than the academic implementation log.
                 for item in data.get("activity", []):
@@ -95,8 +115,13 @@ class CloudHandler(DeliveryMixin, Handler):
             if path == "/api/health" and method == "GET":
                 self.json({"ok": True, "app": "SecretVault", "version": VERSION, "maxFileSize": FILE_LIMIT,
                            "chunkSize": CHUNK_SIZE, "storage": "persistent-private-bucket", "setupRequired": self.store.setup_required,
-                           "features": {"offlineInbox": True}})
+                           "features": {"offlineInbox": True, "rememberSession": True}})
                 return
+            if path == "/api/logout" and method == "POST":
+                self.current_user()
+                token_hash = digest(self.headers["Authorization"][7:].encode())
+                if self.store.one("SELECT token_hash FROM remembered_sessions WHERE token_hash=?", (token_hash,)):
+                    self.store.execute("DELETE FROM remembered_sessions WHERE token_hash=?", (token_hash,))
             if path == "/api/notifications/read" and method == "POST":
                 user = self.current_user()
                 body = self.read_json()
@@ -183,6 +208,7 @@ class CloudHandler(DeliveryMixin, Handler):
             db.execute("INSERT INTO accounts VALUES(?,'user',?,?) ON CONFLICT(user_id) DO UPDATE SET enabled=excluded.enabled,quota=excluded.quota", (target["id"], int(enabled), quota))
             if not enabled:
                 db.execute("DELETE FROM sessions WHERE user_id=?", (target["id"],))
+                db.execute("DELETE FROM remembered_sessions WHERE user_id=?", (target["id"],))
         self.store.event(actor["id"], "account.updated", target["name"], "Đang hoạt động" if enabled else "Tạm dừng")
         self.json({"ok": True})
 

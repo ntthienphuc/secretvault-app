@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import threading
 from pathlib import Path
 
 from .store import CloudStore
@@ -45,6 +46,10 @@ class BucketStore(CloudStore):
         snapshot_dir.mkdir(parents=True, exist_ok=True)
         entries = list(api.list_bucket_tree(bucket_id, prefix="secretvault/metadata", recursive=False))
         snapshots = sorted((entry.path for entry in entries if hasattr(entry, "size") and entry.path.endswith(".json")), reverse=True)
+        self._remote_snapshots = set(snapshots)
+        self._retention_pending = set()
+        self._retention_lock = threading.Lock()
+        self._retention_worker = None
         for remote in snapshots[:3]:
             name = Path(remote).name
             if not name.startswith("state-"):
@@ -72,15 +77,39 @@ class BucketStore(CloudStore):
         return target
 
     def trim_snapshots(self):
-        entries = list(self.bucket_api.list_bucket_tree(self.bucket_id, prefix="secretvault/metadata", recursive=False))
-        snapshots = sorted((entry.path for entry in entries if hasattr(entry, "size") and Path(entry.path).name.startswith("state-") and entry.path.endswith(".json")), reverse=True)
-        if len(snapshots) > 3:
-            try:
-                self.bucket_api.batch_bucket_files(self.bucket_id, delete=snapshots[3:])
-            except Exception:
-                # A retention failure must never roll back an acknowledged write.
-                pass
+        # Called only after commit. Retain three verified versions; cleanup does
+        # not list the bucket or block an authenticated request on remote deletion.
+        with self._retention_lock:
+            self._remote_snapshots.update("secretvault/metadata/" + p.name for p in self.snapshots.glob("state-*.json"))
+            obsolete = sorted(self._remote_snapshots, reverse=True)[3:]
+            self._retention_pending.update(obsolete)
+            self._remote_snapshots.difference_update(obsolete)
+            if self._retention_pending and self._retention_worker is None:
+                self._retention_worker = threading.Thread(target=self._flush_retention, daemon=True)
+                self._retention_worker.start()
         super().trim_snapshots()
+
+    def _flush_retention(self):
+        while True:
+            with self._retention_lock:
+                pending = list(self._retention_pending)
+                self._retention_pending.clear()
+                if not pending:
+                    self._retention_worker = None
+                    return
+            try:
+                self.bucket_api.batch_bucket_files(self.bucket_id, delete=pending)
+            except Exception:
+                with self._retention_lock:
+                    self._retention_pending.update(pending)
+                    self._retention_worker = None
+                return  # Next commit or restart retries; acknowledged data remains safe.
+
+    def wait_for_retention(self, timeout=10):
+        """Bounded shutdown/test hook; normal API requests never wait here."""
+        worker = self._retention_worker
+        if worker:
+            worker.join(timeout)
 
     def chunk_path(self, file_id, index):
         return BucketBlob(self, file_id, index)

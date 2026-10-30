@@ -41,6 +41,7 @@ with tempfile.TemporaryDirectory() as p:
     else: raise AssertionError('failed chunk acknowledged')
     assert not (root/'cache2'/'ciphertext'/'f_test-1.bin').exists()
     checks.append('Failed remote chunk uploads are not acknowledged or cached')
+    store.wait_for_retention(); restart.wait_for_retention()
     assert len([k for k in api.objects if k.startswith('secretvault/metadata/')])<=3
     checks.append('Snapshot retention preserves the latest three remote versions')
     api.fail=False

@@ -2,7 +2,7 @@
 
 SQLite WAL is deliberately kept on a local disk, never on the object-store mount.
 Only ciphertext and checksum-verified metadata snapshots reach persistent storage.
-Sessions and ephemeral live-transfer secrets/payloads do not survive a restart.
+Only explicitly remembered sessions survive a restart; live secrets never do.
 """
 
 from __future__ import annotations
@@ -19,7 +19,8 @@ from pathlib import Path
 from vaultserver.store import Store, canonical, now, uid
 
 LEGACY_TABLES = ("users", "contacts", "files", "chunks", "shares", "activity", "accounts", "uploads", "events")
-TABLES = LEGACY_TABLES + ("share_receipts", "copy_jobs", "notifications", "blob_garbage")
+V2_TABLES = LEGACY_TABLES + ("share_receipts", "copy_jobs", "notifications", "blob_garbage")
+TABLES = V2_TABLES + ("remembered_sessions",)
 USER_QUOTA = 100 * 1024 * 1024
 TOTAL_QUOTA = 512 * 1024 * 1024
 FILE_LIMIT = 25 * 1024 * 1024
@@ -66,6 +67,9 @@ class CloudStore(Store):
                 );
                 CREATE TABLE IF NOT EXISTS blob_garbage (
                     file_id TEXT PRIMARY KEY, indices TEXT NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS remembered_sessions (
+                    token_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL, expires INTEGER NOT NULL
                 );
             """)
         self.restore()
@@ -127,7 +131,7 @@ class CloudStore(Store):
                 self.trim_snapshots()
 
     def snapshot(self, db):
-        payload = {"version": 2, "created": now(), "tables": {
+        payload = {"version": 3, "created": now(), "tables": {
             table: [dict(row) for row in db.execute('SELECT * FROM "' + table + '"')]
             for table in TABLES
         }}
@@ -158,7 +162,7 @@ class CloudStore(Store):
                 if hashlib.sha256(raw).hexdigest() != expected:
                     continue
                 payload = json.loads(raw)
-                expected_tables = LEGACY_TABLES if payload.get("version") == 1 else TABLES if payload.get("version") == 2 else ()
+                expected_tables = {1: LEGACY_TABLES, 2: V2_TABLES, 3: TABLES}.get(payload.get("version"), ())
                 if not expected_tables or set(payload["tables"]) != set(expected_tables):
                     continue
                 with self.db() as db:

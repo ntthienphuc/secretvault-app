@@ -20,7 +20,7 @@ with tempfile.TemporaryDirectory() as temp:
     migrated=CloudStore(root/'runtime2',root/'persist')
     assert migrated.user('u_test')['name']=='Migration'
     assert migrated.one('SELECT COUNT(*) n FROM notifications')['n']==0
-    assert json.loads(sorted(migrated.snapshots.glob('state-*.json'))[-1].read_text())['version']==2
+    assert json.loads(sorted(migrated.snapshots.glob('state-*.json'))[-1].read_text())['version']==3
     checks.append('Version 1 production snapshots migrate without losing accounts')
     with migrated.atomic():
         migrated.execute('INSERT INTO share_receipts VALUES(?,?,?,?)',('s_test',12,34,'f_copy'))
