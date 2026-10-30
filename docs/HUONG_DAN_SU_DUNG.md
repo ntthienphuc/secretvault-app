@@ -12,7 +12,7 @@ Lần mở đầu có thể phải chờ máy chủ miễn phí thức dậy. Đ
 
 Chọn **Tạo tài khoản**, nhập tên, email và mật khẩu ít nhất 10 ký tự, rồi nhập lại mật khẩu. Nút **Hiện/Ẩn** giúp kiểm tra mật khẩu đang gõ. Giữ mật khẩu ở nơi an toàn: bản demo chưa xác minh email và chưa hỗ trợ khôi phục mật khẩu.
 
-Đăng nhập cùng tài khoản trên thiết bị khác để mở tệp đã lưu. Tải lại trang hoặc đóng app sẽ khóa phiên trên thiết bị; bạn đăng nhập lại bình thường. Khi dùng máy chung, mở **Tài khoản**, rồi bấm **Đăng xuất**. Trên PC, bấm tên của bạn ở góc dưới thanh bên; trên điện thoại, dùng mục **Tài khoản** ở thanh dưới. Liên kết tải tệp đã giải mã trong app được dọn khi đăng xuất; những bản đã lưu trong Downloads vẫn do bạn quản lý.
+Đăng nhập cùng tài khoản trên thiết bị khác để mở tệp đã lưu. F5/tải lại trang giữ phiên trong tab hiện tại, tối đa 12 giờ. Chọn **Ghi nhớ trên thiết bị này trong 7 ngày** khi đăng nhập để mở lại cả sau khi đóng tab/app hoặc server khởi động lại. Chỉ chọn trên thiết bị cá nhân; ai dùng được hồ sơ trình duyệt này có thể mở kho. App không lưu mật khẩu. Khi dùng máy chung, mở **Tài khoản**, rồi bấm **Đăng xuất**. Trên PC, bấm tên của bạn ở góc dưới thanh bên; trên điện thoại, dùng mục **Tài khoản** ở thanh dưới. Liên kết tải tệp đã giải mã trong app được dọn khi đăng xuất; những bản đã lưu trong Downloads vẫn do bạn quản lý.
 
 ## Lưu và nhận tệp
 

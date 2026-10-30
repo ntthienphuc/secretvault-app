@@ -2,6 +2,7 @@ import * as api from "./api.js";
 import * as C from "./crypto.js";
 import { authView, shell, esc } from "./view.js";
 import { sessionGuard, downloadShelf } from "./lifecycle.js";
+import { saveSession, loadSession, forgetSessions } from "./remember.js";
 
 const root = document.getElementById("app");
 const session = sessionGuard();
@@ -9,7 +10,7 @@ const downloads = downloadShelf(document.getElementById("download-host"));
 let modalTrigger = null;
 const state = {
   authMode: "login", loginEmail: "", user: null, identity: null, encryptedBundle: null,
-  service: "connecting",
+  service: "connecting", remember: false, remembered: false,
   ownerCode: new URLSearchParams(location.hash.slice(1)).get("owner") || "",
   remote: { users: [], contacts: [], files: [], shares: [], live: [], activity: [] },
   view: location.pathname === "/admin" ? "admin" : location.pathname === "/setup" ? "setup" : "vault", search: "", busy: "", modal: null, candidate: null, admin: null, trash: null,
@@ -120,12 +121,12 @@ async function checkPinned(user) {
   localStorage.setItem(pinCacheKey(user), user.public.fingerprint);
 }
 
-async function refresh(force = false) {
+async function refresh(force = false, supplied = null) {
   if (!state.user) {
     return;
   }
   const current = session.capture();
-  const remote = await api.get("/api/bootstrap");
+  const remote = supplied || await api.get("/api/bootstrap");
   const remoteHash = await C.objectHash(remote);
   if (!current() || !state.user) return;
   const changed = remoteHash !== state.remoteHash;
@@ -167,6 +168,7 @@ async function auth(form) {
   const email = form.querySelector("#auth-email").value.trim().toLowerCase();
   const password = form.querySelector("#auth-password").value;
   const register = state.authMode === "register";
+  const remember = !!form.querySelector("#auth-remember")?.checked;
   C.assert(state.service === "ready", "Máy chủ đang kết nối. Vui lòng chờ hoặc bấm Kết nối lại.");
   const name = form.querySelector("#auth-name")?.value.trim();
   if (register) {
@@ -185,10 +187,10 @@ async function auth(form) {
   if (register) {
     const account = await C.makeAccount(email, password);
     const proof = await C.sign(account.identity, { purpose: "register-v2", email, public: account.public });
-    response = await api.post("/api/register", { email, authProof, name, public: account.public, bundle: account.bundle, proof });
+    response = await api.post("/api/register", { email, authProof, name, public: account.public, bundle: account.bundle, proof, remember });
     identity = account.identity;
   } else {
-    response = await api.post("/api/login", { email, authProof });
+    response = await api.post("/api/login", { email, authProof, remember });
     identity = await C.unlockAccount(email, password, response.bundle, response.user.public);
   }
   session.renew();
@@ -197,6 +199,9 @@ async function auth(form) {
   state.identity = identity;
   state.encryptedBundle = response.bundle;
   state.loginEmail = email;
+  state.remembered = !!response.remembered;
+  try { await saveSession(response, identity, state.remembered); }
+  catch { toast("Trình duyệt chưa cho lưu phiên. Bạn vẫn dùng được app, nhưng tải lại sẽ cần đăng nhập.", true); }
   state.signatures.clear();
   state.verified.clear();
   state.view = location.pathname === "/admin" ? "admin" : location.pathname === "/setup" ? "setup" : "vault";
@@ -209,11 +214,14 @@ async function auth(form) {
   toast(register ? "Không gian của bạn đã sẵn sàng." : "Chào mừng bạn trở lại SecretVault.");
 }
 
-async function logout() {
+async function logout(broadcast = true) {
+  const leavingUser = state.user?.id;
   session.renew();
   // Capture the authenticated request, then close local access immediately.
   const closing = api.post("/api/logout", {}).catch(() => {});
   api.setToken("");
+  const forgetting = forgetSessions().catch(() => {});
+  if (broadcast && leavingUser) sessionChannel?.postMessage({type:"logout",userId:leavingUser});
   downloads.clear();
   document.getElementById("toast-host").replaceChildren();
   if (state.identity?.vaultKey) {
@@ -247,10 +255,11 @@ async function logout() {
   state.sendNotice = "";
   state.sendResult = null;
   state.notificationIds = null;
+  state.remembered = false;
   state.authMode = "login";
   progress();
   render();
-  await closing;
+  await Promise.all([closing, forgetting]);
 }
 
 async function upload(file, { quiet = false, sourceShareId = null } = {}) {
@@ -834,6 +843,7 @@ root.addEventListener("submit", (event) => {
   task().catch(fail);
 });
 root.addEventListener("change", (event) => {
+  if (event.target.id === "auth-remember") state.remember = event.target.checked;
   if (event.target.id === "send-existing") {
     state.sendStoredId = event.target.value || null;
     state.liveFile = null; state.sendResult = null;
@@ -908,8 +918,38 @@ root.addEventListener("input", (event) => {
   }
 });
 
-// Reloading closes the local unlocked session and requires a normal sign-in.
-api.setToken("");
+const sessionChannel = typeof BroadcastChannel === "function" ? new BroadcastChannel("sv-session-v1") : null;
+if (sessionChannel) sessionChannel.onmessage = event => {
+  if (event.data?.type === "logout" && event.data.userId === state.user?.id) logout(false);
+};
+async function restoreSession() {
+  if (state.user || state.busy) return;
+  const current = session.capture();
+  progress("Đang mở lại không gian của bạn…");
+  try {
+    const saved = await loadSession();
+    if (!saved || !current()) return;
+    api.setToken(saved.token);
+    const remote = await api.get("/api/bootstrap");
+    if (!current()) return;
+    C.assert(remote.user.id === saved.user.id && remote.user.public.fingerprint === saved.user.public.fingerprint, "Danh tính phiên không khớp");
+    session.renew(); state.user = remote.user; state.identity = saved.identity;
+    state.loginEmail = remote.user.email; state.remembered = saved.persistent;
+    state.remote = remote; state.remoteHash = "";
+    await refresh(true, remote);
+    if (state.view === "admin" && state.user.role === "admin") await loadAdmin();
+  } catch (error) {
+    api.setToken("");
+    state.user = null; state.identity = null;
+    if ([401,403].includes(error.status) || !error.status && !/kết nối|phản hồi chậm|khởi động/.test(error.message)) {
+      await forgetSessions().catch(() => {});
+      toast("Phiên đã hết hạn hoặc thiết bị chưa mở được phiên. Vui lòng đăng nhập lại.", true);
+    } else {
+      state.service = "unavailable";
+      toast("Chưa khôi phục được kết nối. Bấm Kết nối lại; phiên trên thiết bị vẫn được giữ.", true);
+    }
+  } finally { progress(); updateService(); }
+}
 if (state.ownerCode) history.replaceState({}, "", location.pathname);
 render();
 async function checkService() {
@@ -922,6 +962,7 @@ async function checkService() {
     state.service = "unavailable";
   }
   updateService();
+  if (state.service === "ready") await restoreSession();
 }
 function updateService() {
   const status = document.getElementById("service-status");

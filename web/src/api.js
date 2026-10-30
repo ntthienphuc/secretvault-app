@@ -1,10 +1,9 @@
 import { API_BASE } from "./config.js";
 
-let token = sessionStorage.getItem("sv3-session") || "";
+let token = "";
+sessionStorage.removeItem("sv3-session");
 export function setToken(value) {
   token = value || "";
-  if (token) sessionStorage.setItem("sv3-session", token);
-  else sessionStorage.removeItem("sv3-session");
 }
 
 export async function request(path, options = {}) {
