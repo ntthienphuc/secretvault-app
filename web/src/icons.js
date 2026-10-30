@@ -1,5 +1,7 @@
 // A small, local SVG set. All paths are application-owned UI assets.
 const paths = {
+  more: '<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
+  filter: '<path d="M4 7h16M7 12h10M10 17h4"/>',
   trash: '<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/>',
   shield: '<path d="m12 3 8 3v6c0 4.7-3.3 7.9-8 10-4.7-2.1-8-5.3-8-10V6Z"/><path d="m8.5 12 2.3 2.3 4.7-4.8"/>',
   vault: '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M12 8v2m0 4v2m-4-4h2m4 0h2"/>',

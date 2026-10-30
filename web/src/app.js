@@ -13,7 +13,7 @@ const state = {
   ownerCode: new URLSearchParams(location.hash.slice(1)).get("owner") || "",
   remote: { users: [], contacts: [], files: [], shares: [], live: [], activity: [] },
   view: location.pathname === "/admin" ? "admin" : location.pathname === "/setup" ? "setup" : "vault", search: "", busy: "", modal: null, candidate: null, admin: null, trash: null,
-  liveFile: null, connected: true, remoteHash: "", signatures: new Map(), verified: new Map(),
+  liveFile: null, recentUploadId: null, connected: true, remoteHash: "", signatures: new Map(), verified: new Map(),
   incoming: new Map(), outgoing: new Map(), sending: new Set(), polling: false,
   fileType: "all", layout: localStorage.getItem("sv2-layout") || "list", sort: "newest",
 };
@@ -22,13 +22,18 @@ function render() {
   const hadModal = !!root.querySelector('[role="dialog"]');
   const focusedId = document.activeElement?.id;
   const selection = document.activeElement?.selectionStart;
+  const openDetails = [...root.querySelectorAll("details[open][id]")].map(item => item.id);
   const values = new Map();
   for (const input of root.querySelectorAll("input[id],select[id]")) {
-    if (!["password", "file"].includes(input.type)) {
+    if (!["password", "file"].includes(input.type) && !["search", "file-type", "file-sort"].includes(input.id)) {
       values.set(input.id, input.value);
     }
   }
   root.innerHTML = state.user ? shell(state) : authView(state);
+  for (const id of openDetails) {
+    const detail = document.getElementById(id);
+    if (detail?.tagName === "DETAILS") detail.open = true;
+  }
   for (const [id, value] of values) {
     const input = document.getElementById(id);
     if (input && input.type !== "file" && input.type !== "password") {
@@ -48,11 +53,13 @@ function render() {
   }
   const dialog = root.querySelector('[role="dialog"]');
   document.body.classList.toggle("has-modal", !!dialog);
-  if (dialog && !hadModal) dialog.querySelector("input:not([type=hidden]),select,button")?.focus();
+  if (dialog && !hadModal) (dialog.querySelector("[data-autofocus]") || dialog.querySelector("input:not([type=hidden]),select,button"))?.focus();
   if (!dialog && hadModal && modalTrigger) {
     root.querySelector(modalTrigger)?.focus();
     modalTrigger = null;
   }
+  root.setAttribute("aria-busy", String(!!state.busy));
+  if (state.busy) root.querySelectorAll('button:not([data-action="close-modal"])').forEach(button => { button.disabled = true; });
 }
 
 function toast(message, error = false) {
@@ -67,6 +74,8 @@ function toast(message, error = false) {
 
 function progress(label = "") {
   state.busy = label;
+  root.setAttribute("aria-busy", String(!!label));
+  if (label) root.querySelectorAll('button:not([data-action="close-modal"])').forEach(button => { button.disabled = true; });
   const holder = document.getElementById("progress-host");
   holder.innerHTML = label ? `<div class="busy-bar" role="status"><span class="status-dot"></span>${esc(label)}</div>` : "";
   if (!label) {
@@ -188,6 +197,8 @@ async function auth(form) {
   await refresh(true);
   if (state.view === "admin" && state.user.role === "admin") await loadAdmin();
   progress();
+  document.getElementById("main-content")?.focus({ preventScroll: true });
+  window.scrollTo({ top: 0, behavior: "instant" });
   toast(register ? "Không gian của bạn đã sẵn sàng." : "Chào mừng bạn trở lại SecretVault.");
 }
 
@@ -222,6 +233,7 @@ async function logout() {
   state.incoming.clear();
   state.outgoing.clear();
   state.liveFile = null;
+  state.recentUploadId = null;
   state.authMode = "login";
   progress();
   render();
@@ -264,6 +276,10 @@ async function upload(file) {
       manifest, signature: await C.sign(state.identity, manifest),
       ownerWrap: await C.wrapOwner(state.identity, fileId, ownerId, key),
     });
+    state.recentUploadId = fileId;
+    state.view = "vault";
+    state.search = "";
+    state.fileType = "all";
     await refresh(true);
     toast("Đã tải lên " + file.name);
   } finally {
@@ -356,7 +372,7 @@ async function shareFile(form) {
     const envelope = await C.wrapElgamal(key, recipient.public.elgamal, context);
     const payload = { ...context, envelope, created: Date.now() };
     await api.post("/api/shares", { payload, signature: await C.sign(state.identity, payload) });
-    state.modal = null;
+    state.modal = { type: "sent", id: file.id, recipient: { name: recipient.name, email: recipient.email } };
     await refresh(true);
     toast("Đã chia sẻ với " + recipient.name + ". Người nhận có thể mở tệp bất cứ lúc nào.");
   } finally {
@@ -378,9 +394,13 @@ async function pinCandidate() {
 
 async function startLive(form) {
   const file = state.liveFile;
-  const recipient = userById(form.querySelector("#live-recipient").value);
-  C.assert(file && recipient, "Chọn tệp và người nhận");
+  const email = form.querySelector("#live-email").value.trim().toLowerCase();
+  C.assert(file && email, "Chọn tệp và nhập email người nhận");
   C.assert(file.size <= (state.remote.limits?.maxFileSize || 25 * 1048576), "Mỗi tệp tối đa 25 MiB");
+  progress("Đang tìm người nhận…");
+  const recipient = await api.get("/api/directory?email=" + encodeURIComponent(email));
+  C.assert(recipient.id !== state.user.id, "Đây là tài khoản của bạn");
+  if (!userById(recipient.id)) state.remote.users.push(recipient);
   C.assert(recipient.online, "Người nhận đang ngoại tuyến. Chia sẻ từ Tệp của tôi để họ mở sau, hoặc chờ họ online.");
   progress("Đang chuẩn bị lời mời…");
   await checkPinned(recipient);
@@ -393,7 +413,12 @@ async function startLive(form) {
     total: Math.max(1, Math.ceil(file.size / C.CHUNK_SIZE)),
   };
   state.outgoing.set(offer.id, { privateKey: pair.privateKey, file });
-  await api.post("/api/live", { payload: offer, signature: await C.sign(state.identity, offer) });
+  try {
+    await api.post("/api/live", { payload: offer, signature: await C.sign(state.identity, offer) });
+  } catch (error) {
+    state.outgoing.delete(offer.id);
+    throw error;
+  }
   state.liveFile = null;
   await refresh(true);
   progress();
@@ -517,9 +542,15 @@ async function action(event) {
   if (nav) {
     if (state.busy) return toast("Chờ thao tác hiện tại hoàn tất.");
     state.view = nav.dataset.view;
+    state.search = "";
+    state.fileType = "all";
+    state.recentUploadId = null;
     state.modal = null;
+    root.querySelectorAll("details[open]").forEach(item => { item.open = false; });
     history.replaceState({}, "", state.view === "admin" ? "/admin" : state.view === "setup" ? "/setup" : "/");
     render();
+    document.getElementById("main-content")?.focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: "instant" });
     if (state.view === "admin" && state.user.role === "admin") await loadAdmin();
     if (state.view === "trash") {
       progress("Đang mở thùng rác…");
@@ -533,6 +564,7 @@ async function action(event) {
     return;
   }
   const { action, id } = element.dataset;
+  element.closest("details.file-menu")?.removeAttribute("open");
   if (action === "close-modal") {
     if (element.classList.contains("modal-layer") && event.target !== element) {
       return;
@@ -686,9 +718,17 @@ root.addEventListener("submit", (event) => {
   task().catch(fail);
 });
 root.addEventListener("change", (event) => {
+  if (event.target.id === "file-type") {
+    state.fileType = event.target.value;
+    root.querySelector(".filter-menu")?.removeAttribute("open");
+    render();
+    root.querySelector(".filter-menu summary")?.focus();
+  }
   if (event.target.id === "file-sort") {
     state.sort = event.target.value;
+    root.querySelector(".filter-menu")?.removeAttribute("open");
     render();
+    root.querySelector(".filter-menu summary")?.focus();
   }
   if (event.target.id === "upload-input") {
     if (state.busy) return;
@@ -696,6 +736,7 @@ root.addEventListener("change", (event) => {
     (async () => { for (const file of selected) await upload(file); })().catch(fail);
   }
   if (event.target.id === "live-input") {
+    if (state.busy) return;
     state.liveFile = event.target.files[0];
     render();
   }
@@ -723,6 +764,13 @@ root.addEventListener("drop", (event) => {
     return;
   }
   const files = Array.from(event.dataTransfer?.files || []);
+  if (state.view === "live") {
+    if (files.length !== 1) return toast("Chọn một tệp cho mỗi lần gửi trực tiếp.", true);
+    state.liveFile = files[0];
+    render();
+    return;
+  }
+  if (state.modal) return toast("Đóng hộp thoại trước khi tải tệp khác.");
   if (files.length > 1) {
     toast("Đang tải lần lượt " + files.length + " tệp.");
   }
@@ -761,13 +809,21 @@ function updateService() {
 }
 checkService();
 document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !state.modal) {
+    root.querySelectorAll("details[open]").forEach(item => { item.open = false; item.querySelector("summary")?.focus(); });
+  }
   if (event.key === "Escape" && state.modal) { state.modal = null; render(); }
   if (event.key === "Tab" && state.modal) {
-    const items = [...root.querySelectorAll('.modal button:not(:disabled),.modal input:not([type=hidden]),.modal select,.modal a[href]')];
+    const items = [...root.querySelectorAll('.modal button:not(:disabled),.modal input:not([type=hidden]),.modal select,.modal a[href],.modal summary')].filter(item => item.getClientRects().length);
     const first = items[0], last = items.at(-1);
     if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
     else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
   }
+});
+document.addEventListener("click", event => {
+  root.querySelectorAll(".file-menu[open],.filter-menu[open]").forEach(item => {
+    if (!item.contains(event.target)) item.open = false;
+  });
 });
 window.addEventListener("beforeunload", event => {
   if (state.busy || state.outgoing.size || state.incoming.size) { event.preventDefault(); event.returnValue = ""; }

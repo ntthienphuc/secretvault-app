@@ -9,7 +9,9 @@
 - **Windows x64:** bộ cài duy nhất trong `release/SecretVault-Online-Setup-3.0.1-x64.exe`.
 - **Gói bàn giao:** `deliverables/SecretVault_Online/`; tài liệu và slide nằm trong `Tai_lieu/`.
 
-Đăng ký bằng email và mật khẩu ít nhất 10 ký tự. Tải tệp vào **Tệp của tôi**, chọn **Chia sẻ**, nhập email tài khoản người nhận. Người nhận mở **Được chia sẻ** trên web hoặc app Windows. Gửi trực tiếp cần cả hai giữ app mở.
+Đăng ký bằng email và mật khẩu ít nhất 10 ký tự. Tải tệp vào **Tệp của tôi**, chọn **Chia sẻ**, nhập email tài khoản người nhận. Người nhận mở **Đã nhận** trên web hoặc app Windows. Gửi trực tiếp cần cả hai giữ app mở; chọn tệp và nhập email ngay trong màn hình gửi, không cần thêm danh bạ trước.
+
+Giao diện mới ngày 30/10 tập trung vào Tải tệp → Chia sẻ → Đã nhận. Menu **…** chứa tải xuống/thùng rác; bộ lọc nằm cạnh ô tìm kiếm. App Windows Online đang cài tự tải giao diện mới khi mở lại.
 
 Mỗi tệp tối đa **25 MiB**, mỗi tài khoản mặc định **100 MiB**, toàn bộ demo **512 MiB** và **50 tài khoản**. Thùng rác vẫn tính dung lượng; khôi phục mở lại quyền chia sẻ chưa thu hồi. Chưa có khôi phục mật khẩu.
 

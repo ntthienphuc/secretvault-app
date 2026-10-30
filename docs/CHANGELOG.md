@@ -1,5 +1,17 @@
 # Thay đổi SecretVault
 
+## Giao diện web cập nhật 30/10/2026
+
+- Tập trung ba luồng: Tệp của tôi, Đã nhận và Gửi trực tiếp; khu tải tệp nằm ở giữa nội dung và chuyển sang bước chia sẻ khi tải xong.
+- Mỗi dòng tệp ưu tiên một nút Chia sẻ hoặc Tải xuống; thao tác còn lại đặt trong dấu …, bộ lọc và sắp xếp thu vào một menu.
+- Chia sẻ và gửi trực tiếp bằng email, không bắt buộc thêm danh bạ. Xác nhận rõ tên/email người nhận khi chia sẻ thành công.
+- Lời mời nhận tệp xuất hiện trên các trang; ưu tiên phiên đang diễn ra, thu gọn phiên cũ.
+- Bố cục, chữ, khoảng cách, trạng thái rỗng, thanh điều hướng điện thoại và hộp thoại được thiết kế lại đồng bộ.
+- Đưa focus về nội dung sau đăng nhập, giữ focus bàn phím trong hộp thoại, chặn nút khi đang xử lý và đóng bộ lọc sau khi chọn.
+- Bộ cài Windows Online vẫn là 3.0.1, tải giao diện mới từ web; không thay đổi API Python hoặc thuật toán mã hóa.
+- Hướng dẫn sử dụng được cập nhật. Báo cáo và slide 3.0.1 đã xuất trước đợt UI này giữ nguyên ảnh minh họa của lần xuất trước.
+
+
 ## Online 3.0.1 ngày 30 tháng 10 năm 2026
 
 - Dọn liên kết và URL chứa bản rõ ngay khi đăng xuất, khi đóng thẻ tải hoặc khi hết hạn.

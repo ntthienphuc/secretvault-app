@@ -30,3 +30,5 @@ audit/*.log
 audit/*results.json
 audit/cloud-hf-bundle.json
 audit/web-regressions.json
+
+audit/ui-redesign-*/

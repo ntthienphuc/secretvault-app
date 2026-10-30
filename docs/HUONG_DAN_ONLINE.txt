@@ -1,5 +1,5 @@
 SECRET VAULT ONLINE 3.0.1
-Cập nhật 30/10/2026
+Giao diện mới cập nhật 30/10/2026 — app hiện có không cần cài lại
 
 WEB: https://secretvault-online.vercel.app
 ADMIN: https://secretvault-online.vercel.app/admin
@@ -12,10 +12,11 @@ Máy người dùng không cần cài Python, chứng chỉ hoặc chạy server
 3. Tạo tài khoản bằng email và mật khẩu ít nhất 10 ký tự. Giữ mật khẩu:
    hiện chưa có khôi phục mật khẩu.
 4. Tải tệp vào Tệp của tôi; bấm Chia sẻ rồi nhập email người nhận đã có tài khoản.
-5. Người nhận mở Được chia sẻ và tải xuống. Người gửi có thể offline.
-6. Gửi trực tiếp: thêm Danh bạ, cả hai online, gửi lời mời, xác nhận, tải xuống.
+5. Người nhận mở Đã nhận và tải xuống. Người gửi có thể offline.
+6. Gửi trực tiếp: cả hai online, chọn tệp, nhập email, gửi lời mời, xác nhận, tải xuống.
    Giữ app mở. Tải lại trang hoặc mất phiên cần tạo lời mời mới.
-7. Thùng rác có thể khôi phục; vẫn tính dung lượng và khôi phục quyền chia sẻ cũ.
+7. Dấu … bên cạnh tệp: Tải xuống hoặc Chuyển vào thùng rác.
+   Thùng rác có thể khôi phục; vẫn tính dung lượng và khôi phục quyền chia sẻ cũ.
 
 25 MiB/tệp; mặc định 100 MiB/tài khoản. Toàn demo 512 MiB, tối đa 50 tài khoản.
 Sau giải mã, trình duyệt/app lưu tệp. Nếu chưa tải, bấm Lưu tệp ở thẻ hiện ra.
