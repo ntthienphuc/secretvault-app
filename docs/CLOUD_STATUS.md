@@ -1,41 +1,50 @@
-# SecretVault Online 3.0 — verified release
+# SecretVault Online 3.0.1 — trạng thái bàn giao
 
-Verified on 27 October 2026, Asia/Ho_Chi_Minh.
+Cập nhật ngày 30/10/2026, múi giờ Việt Nam.
 
-## Live services
+## Dịch vụ đang dùng
 
-- Web and mobile browser: **https://secretvault-online.vercel.app**.
-- Administrator dashboard: **https://secretvault-online.vercel.app/admin**.
-- Python API: **https://secretvault-api-thienphuc.onrender.com**.
-- Health: **https://secretvault-api-thienphuc.onrender.com/api/health**.
-- Source: **https://github.com/ntthienphuc/secretvault-app**.
-- Render Free service: secretvault-api-thienphuc, ID srv-dbfoqgt9fdbs739uuq1g, Singapore, Python 3.12.12, one instance. Auto-deploy is off.
-- Runtime code was deployed from commit cce9f743c9e570f4ea616b72bb71959052d14162. Later commits contain web, test and documentation updates; the deployed backend source matches the current backend source.
-- Private persistent storage: HF bucket thienphuc12339/secretvault-api-storage. Its fine-grained token is restricted to that bucket and stored only in Render's HF_TOKEN configuration. The owner explicitly approved token creation and this storage destination. No credentials were committed.
-- The earlier CPU prototype Space on HF is paused. Its private bucket remains available to Render. Free HF ZeroGPU could not host the CPU-only API, so the owner approved Render Free instead.
+- Web: https://secretvault-online.vercel.app
+- Quản trị: https://secretvault-online.vercel.app/admin
+- Python API: https://secretvault-api-thienphuc.onrender.com
+- Nguồn: https://github.com/ntthienphuc/secretvault-app
+- Vercel phục vụ web đã cập nhật từ commit `5ca2c3b`; tám tài nguyên web khớp mã nguồn sau chuẩn hóa xuống dòng.
+- Render Free, Singapore, một instance; tự deploy đang tắt. Backend giữ phiên bản API 3.0.0 và commit runtime `cce9f743c9e570f4ea616b72bb71959052d14162`. Đợt polish này không đổi backend.
+- Bucket HF riêng `thienphuc12339/secretvault-api-storage` giữ bản mã và snapshot. Token chỉ nằm ở secret của Render. Space thử nghiệm cũ vẫn dừng; không chạy hai writer cùng bucket.
 
-## Windows and owner setup
+## Bộ cài và tài khoản quản trị
 
-Installer: release/SecretVault-Online-Setup-3.0.0-x64.exe. A copy is on the Desktop in the SecretVault Online folder. The native client loads the same Vercel workspace through Edge WebView2, without requiring Python or a LAN certificate on other PCs.
+Bộ cài hiện hành duy nhất: `release/SecretVault-Online-Setup-3.0.1-x64.exe`. Gói dùng ngay và báo cáo/slide: `deliverables/SecretVault_Online/`. App dùng Edge WebView2 để mở cùng web và dữ liệu online; máy client không cần Python, host LAN hay chứng chỉ nội bộ.
 
-Only first-time owner onboarding remains: open the private .local/Kich-hoat-quan-tri.url shortcut, create or sign into the owner's own SecretVault account, and click activation. The code is prefilled and removed from the URL before normal use. It is not part of the distributed installer or public source. Normal account registration never grants administrator privileges.
+Đã build, cài vào thư mục QA, chạy chẩn đoán, gỡ QA và cập nhật app tại máy Windows hiện có. Sau đó đăng nhập, tải tệp đã upload từ Chrome và lưu qua Save As thật; bản lưu 107 byte khớp SHA-256 với bản gốc. Đây không phải kiểm thử trên Windows sạch. Bộ cài chưa ký số.
 
-The online deployment starts a separate vault. The previous LAN host and its two real accounts were preserved; no private local account data was migrated or uploaded.
+Chủ hệ thống vẫn cần kích hoạt quản trị một lần bằng shortcut riêng `.local/Kich-hoat-quan-tri.url`. Tạo hoặc đăng nhập tài khoản của chính chủ rồi kích hoạt. Mã không nằm trong bộ cài hay gói chia sẻ. Đăng ký thông thường không cấp quyền admin; tài khoản QA không được dùng để chiếm quyền chủ production.
 
-## Verification
+Kho LAN cũ và dữ liệu tài khoản thật được giữ riêng, không di chuyển vào kho online.
 
-- **41 live API/cryptographic checks passed**, including registration/login, encrypted multi-chunk upload and download, signed DH live transfer, offline ElGamal sharing with the sender logged out, revocation, invalid identities and tampered data. Evidence: audit/cloud-production-integration-results.json.
-- **5 live restart recovery checks passed** after Render recorded a real service restart at 00:47. The same account unlocked its identity; stored metadata and ciphertext were recovered; the downloaded file decrypted to the exact pre-restart plaintext hash; user/admin separation and revoked access remained intact. Evidence: audit/cloud-production-restart-results.json.
-- **12 local admin/CORS/quota checks passed**. Evidence: audit/cloud-policy-results.json.
-- **5 storage snapshot recovery checks, 5 remote-adapter checks, and 5 atomicity/liveness checks passed**. The availability test verifies health responses during a blocked durable write and verifies that a failed admin-role save returns 503 without granting the role. Evidence: audit/cloud-persistence-results.json, audit/cloud-bucket-results.json, audit/cloud-availability-results.json.
-- Public access checks: unauthenticated bootstrap/admin requests return 401; private filesystem paths return 404; CORS allows the exact Vercel production origin.
-- Browser UI: local upload/share-by-email/recipient inbox and local admin data were observed. The public web signed in after a live restart and uploaded a real QA text file. The normal UI displayed no raw cryptographic keys or protocol inspector.
-- Windows: final installer completed successfully, the native WebView2 application was responsive and loaded the web page, and the installed executable's endpoint diagnostics returned web 200 / API 200.
-- Responsive layout was observed at 390 × 844 with no document overflow. This was browser emulation, not a physical phone test.
-- Browser automation created the decrypted download link but did not observe a completed native save; cryptographic plaintext equality was independently verified through the live API and after restart.
+## Kiểm chứng ngày 30/10/2026
 
-## Operational bounds
+| Nhóm | Kết quả | Bằng chứng trong `audit/review-20261030/` |
+|---|---|---|
+| Tích hợp API và mật mã online | 41/41 | `integration-live.json` |
+| Đọc lại fixture đã lưu trước đây | 5/5 | `readback-live.json` |
+| Endpoint, ACL và CORS online | 11/11 | `endpoints.json` |
+| Tài nguyên web trùng nguồn | 8/8 | `web-and-health.json` |
+| Tích hợp local | 41/41 | `integration-local.json` |
+| Admin và quota local | 12/12 | `policy-local.json` |
+| Thùng rác và quyền local | 8/8 | `trash-policy.json` |
+| Persistence, bucket và availability | 5 + 5 + 5 | `cloud-*-results.json` |
+| Hồi quy vòng đời phiên và UI | 11/11 | `web-regressions.json` |
+| Cài đặt và tải xuống Windows | Đạt tại máy hiện có | `installer-flow.json`, `windows-download.json` |
 
-The application enforces 25 MiB/file, default 100 MiB/account, 512 MiB total and 50 accounts. Trash still counts toward storage. These are application limits rather than the provider's free storage allowance.
+Có 65 lượt kiểm tra online và 87 lượt local; một số tình huống lặp giữa môi trường nên không cộng thành số ca bảo mật độc lập. Các lỗi bucket được mô phỏng có kiểm soát ở local. Đợt này không restart Render; bằng chứng restart thật của đợt trước ở `audit/cloud-production-restart-results.json`.
 
-Render Free can sleep on inactivity and may need around a minute to wake. Remote persistence adds several seconds to writes. This is a functional academic demo with improved product UI; it has no external cryptographic audit, email verification, password recovery or always-on SLA. The Windows installer is unsigned. The production owner must complete the private first-time activation themselves.
+Chrome đã được thao tác thực tế: đăng ký, xác nhận mật khẩu sai, đăng nhập đúng/sai, chọn tệp từ ổ đĩa, chia sẻ, người gửi đăng xuất, người nhận mở tệp, thùng rác/khôi phục, gửi trực tiếp đến trạng thái Đã nhận, dashboard admin local. Viewport 390 × 844 không tràn ngang; chưa thử điện thoại vật lý. App Windows hoàn tất tải tệp và lưu xuống đĩa.
+
+10 yêu cầu health khi dịch vụ đã hoạt động có trung vị 84.04 ms, khoảng 78.41–254.92 ms. Đây không phải benchmark upload hay nhiều người dùng đồng thời.
+
+## Giới hạn vận hành
+
+25 MiB/tệp, mặc định 100 MiB/tài khoản, 512 MiB toàn ứng dụng và tối đa 50 tài khoản. Thùng rác vẫn tính quota. Đây là giới hạn do ứng dụng đặt, không phải dung lượng nhà cung cấp cam kết.
+
+Render Free có thể ngủ sau 15 phút không hoạt động và cần khoảng một phút để thức dậy: https://render.com/docs/free. Ghi bucket có thể mất thêm vài giây. Bản này phù hợp demo đồ án; chưa có xác minh email, khôi phục mật khẩu, kiểm toán mật mã độc lập, kiểm thử tải lớn đồng thời hoặc SLA luôn sẵn sàng.

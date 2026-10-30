@@ -1,4 +1,4 @@
-# SecretVault Online 3.0
+# SecretVault Online 3.0.1
 
 Web: **https://secretvault-online.vercel.app** (Vercel).  
 Python API: **https://secretvault-api-thienphuc.onrender.com** (Render Free).  
@@ -16,9 +16,11 @@ The web and Windows client use the same accounts and backend. A shared Wi-Fi net
 
 ## Windows client
 
-Install SecretVault-Online-Setup-3.0.0-x64.exe. The application opens the web workspace in a native Edge WebView2 window. Other PCs need no Python, local server, LAN profile or certificate installation. If WebView2 cannot start, the app offers to open the same workspace in the default browser. The installer is not code-signed.
+Install SecretVault-Online-Setup-3.0.1-x64.exe from the current release or delivery folder. The application opens the web workspace in a native Edge WebView2 window. Other PCs need no Python, local server, LAN profile or certificate installation. If WebView2 cannot start, the app offers to open the same workspace in the default browser. The installer is not code-signed.
 
 The application clears its local sign-in state when its window closes. File downloads use the native save dialog. The --diagnose option writes endpoint status to the current user's LocalAppData/SecretVaultOnline folder without account data or credentials.
+
+Version 3.0.1 exposes Trash directly in navigation, adds password visibility and clearer filtered-empty states, and handles keyboard focus in dialogs. Decrypted download links are revoked when replaced, dismissed, after two minutes or on logout. Pending requests from an earlier session cannot restore that session after logout. Native Save As and byte-for-byte readback were verified on the existing Windows machine on 30 October 2026; see CLOUD_STATUS.md for the full validation boundary.
 
 ## Owner activation
 

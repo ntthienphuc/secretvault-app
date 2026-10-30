@@ -1,5 +1,7 @@
 # SecretVault 2.1 — giao diện tùy biến
 
+> Hồ sơ thiết kế lịch sử của bản LAN 2.1. Bản Online 3.0.1 hiện dùng `web/`, tự xử lý khóa, có dashboard admin riêng và không có Crypto Inspector cho người dùng. Xem [thay đổi hiện hành](CHANGELOG.md), [hướng dẫn sử dụng](HUONG_DAN_SU_DUNG.md) và [kiểm thử ngày 30/10](CLOUD_STATUS.md).
+
 Tham khảo chính: [Proton Drive](https://proton.me/drive), cụ thể hình sản phẩm quản lý tệp trên trang chính thức, được xem ngày 26/10/2026. Điểm tham khảo là nền sáng, tông lavender, sidebar tập trung vào file và cách chuyển giữa bảng/thẻ. Tên, biểu tượng, minh họa, nội dung và mã giao diện thuộc nhận diện SecretVault riêng.
 
 ## Những phần được thiết kế lại

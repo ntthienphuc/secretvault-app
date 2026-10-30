@@ -18,3 +18,15 @@ audit/lan-*/
 audit/split-*/
 *.db-wal
 *.db-shm
+.report-build-*/
+.chart-data-*/
+deliverables/
+archive/
+# Generated QA evidence is kept locally; test source remains versioned.
+audit/review-*/
+audit/*.png
+audit/*.jpg
+audit/*.log
+audit/*results.json
+audit/cloud-hf-bundle.json
+audit/web-regressions.json

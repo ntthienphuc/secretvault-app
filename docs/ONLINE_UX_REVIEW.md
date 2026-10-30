@@ -1,5 +1,7 @@
 # SecretVault 2.1 — hosting and online UX review
 
+> Historical proposal for LAN version 2.1. It has been superseded by the deployed Online 3.0.1 release: [current deployment](CLOUD_ONLINE.md), [verified status](CLOUD_STATUS.md), and [release changes](CHANGELOG.md). The current normal UI manages keys automatically; users do not manually pin fingerprints.
+
 Reviewed 26 October 2026. This is a local source/browser review and a deployment proposal. No public endpoint was created, no hosting account was changed, and no production performance claim is made.
 
 ## Recommendation

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
+import { dirname } from "node:path";
 import { sessionGuard, downloadShelf } from "../web/src/lifecycle.js";
 import { authView, shell } from "../web/src/view.js";
 
@@ -64,4 +65,6 @@ await check("A host waking with HTML is reported as temporarily unavailable",asy
   await assert.rejects(api.get("/api/health"),e=>e.status===503);
 });
 globalThis.setTimeout=originalTimeout;globalThis.clearTimeout=originalClear;
-await writeFile("audit/review-20261030/web-regressions.json",JSON.stringify({checkedAt:new Date().toISOString(),passed:results.length,results},null,2));
+const reportPath = process.env.SV_WEB_REPORT || "audit/web-regressions.json";
+await mkdir(dirname(reportPath), {recursive:true});
+await writeFile(reportPath,JSON.stringify({checkedAt:new Date().toISOString(),passed:results.length,results},null,2));
