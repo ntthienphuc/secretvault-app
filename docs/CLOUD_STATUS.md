@@ -1,4 +1,4 @@
-# SecretVault Online 3.0.1 — trạng thái bàn giao
+# SecretVault web/API 3.1 — trạng thái bàn giao
 
 Cập nhật ngày 30/10/2026, múi giờ Việt Nam.
 
@@ -8,8 +8,8 @@ Cập nhật ngày 30/10/2026, múi giờ Việt Nam.
 - Quản trị: https://secretvault-online.vercel.app/admin
 - Python API: https://secretvault-api-thienphuc.onrender.com
 - Nguồn: https://github.com/ntthienphuc/secretvault-app
-- Vercel phục vụ web đã cập nhật từ commit `5ca2c3b`; tám tài nguyên web khớp mã nguồn sau chuẩn hóa xuống dòng.
-- Render Free, Singapore, một instance; tự deploy đang tắt. Backend giữ phiên bản API 3.0.0 và commit runtime `cce9f743c9e570f4ea616b72bb71959052d14162`. Đợt polish này không đổi backend.
+- Vercel phục vụ giao diện hai tab gửi từ commit `edc058d`; cả năm tài nguyên thay đổi khớp mã nguồn sau chuẩn hóa xuống dòng.
+- Render Free, Singapore, một instance; tự deploy đang tắt. Backend API 3.1.0, commit runtime `9b5978e`, đã deploy thành công và kiểm tra health ngày 30/10/2026. Backend đọc được snapshot cũ; sau khi có snapshot v2 không quay về runtime 3.0.0.
 - Bucket HF riêng `thienphuc12339/secretvault-api-storage` giữ bản mã và snapshot. Token chỉ nằm ở secret của Render. Space thử nghiệm cũ vẫn dừng; không chạy hai writer cùng bucket.
 
 ## Bộ cài và tài khoản quản trị
@@ -22,7 +22,21 @@ Chủ hệ thống vẫn cần kích hoạt quản trị một lần bằng shor
 
 Kho LAN cũ và dữ liệu tài khoản thật được giữ riêng, không di chuyển vào kho online.
 
-## Kiểm chứng ngày 30/10/2026
+## Đợt hai tab gửi và xác nhận nhận tệp, 30/10/2026
+
+Gửi trực tiếp dùng Diffie–Hellman tạm thời; gửi để nhận sau dùng ElGamal Hybrid để bọc khóa AES. UI không hiển thị khóa. Nếu người nhận offline khi gửi lời mời, app giữ tệp/email và chuyển tab; người gửi xác nhận trước khi tải lên kho.
+
+Nhận sau tự lưu vào kho người gửi. Người nhận chọn tải về thiết bị hoặc lưu bản riêng vào kho của mình. Bản riêng có khóa và ID mới, vẫn còn khi bản gốc bị xóa. Chuông thông báo và trạng thái từng người được lưu bền vững. Xác nhận tải có nghĩa client đã giải mã và chuẩn bị tải; không chứng minh hệ điều hành đã ghi xong xuống đĩa. Xóa vĩnh viễn qua Thùng rác giải phóng quota; hàng đợi dọn bản mã sẽ thử lại nếu bucket lỗi.
+
+Đợt này có 84 lượt kiểm tra tự động tại môi trường local: luồng nhận/ACL/quota/xóa 17, tích hợp mật mã 41, hồi quy web 11, migration/receipt persistence 4, persistence nền 5, bucket 6. Bằng chứng ở `audit/review-delivery-20261030/`. Đây là các lượt kiểm thử, không phải 84 chứng minh an toàn mật mã độc lập.
+
+Đã thao tác hai tài khoản trên Chrome: tạo tài khoản, offline fallback giữ tệp/email, gửi và tự lưu vào kho, tải tệp nhận, lưu bản riêng, hai thông báo cho người gửi, thùng rác và tải bản riêng sau khi bản gốc vào thùng rác, gửi trực tiếp đến trạng thái đã nhận. Xóa vĩnh viễn được kiểm thử qua API ở dữ liệu QA cô lập; không bấm xóa dữ liệu production. Viewport 390 × 844 và popover thông báo không tràn ngang; chưa thử điện thoại vật lý.
+
+Production API đạt 8/8 kiểm tra trong `production.json`: health 3.1, đăng nhập và mở khóa tài khoản cũ, giải mã fixture ba chunk trước migration đúng từng byte, đọc fixture mới từ bucket, ElGamal cho đúng người nhận, xác nhận tải idempotent, lưu bản riêng có mã hóa mới và thông báo, đọc lại bản riêng và không nhân đôi khi lưu lại. Script QA ban đầu dùng sai tên trường liên kết notification; đã sửa assertion sang `file_id` và chạy lại đạt. Không xóa dữ liệu production; chỉ thêm fixture QA rất nhỏ. Năm tài nguyên web đã thay đổi được so khớp 5/5 (`web-parity.json`).
+
+Hướng dẫn hành vi hiện hành: `docs/SENDING_AND_RECEIPTS.md`, `docs/HUONG_DAN_SU_DUNG.md`. Bộ cài Windows vẫn là launcher Online 3.0.1, tải giao diện mới từ web; đợt này không build/cài lại launcher. Báo cáo và slide 3.0.1 trong gói bàn giao là bản xuất trước khi thêm receipts và bản sao riêng; dùng hướng dẫn bổ sung mới để đọc các thay đổi.
+
+## Kiểm chứng đợt trước trong ngày 30/10/2026 (mốc 3.0.1)
 
 | Nhóm | Kết quả | Bằng chứng trong `audit/review-20261030/` |
 |---|---|---|
