@@ -1,8 +1,12 @@
 import * as api from "./api.js";
 import * as C from "./crypto.js";
 import { authView, shell, esc } from "./view.js";
+import { sessionGuard, downloadShelf } from "./lifecycle.js";
 
 const root = document.getElementById("app");
+const session = sessionGuard();
+const downloads = downloadShelf(document.getElementById("download-host"));
+let modalTrigger = null;
 const state = {
   authMode: "login", loginEmail: "", user: null, identity: null, encryptedBundle: null,
   service: "connecting",
@@ -15,6 +19,7 @@ const state = {
 };
 
 function render() {
+  const hadModal = !!root.querySelector('[role="dialog"]');
   const focusedId = document.activeElement?.id;
   const selection = document.activeElement?.selectionStart;
   const values = new Map();
@@ -41,12 +46,20 @@ function render() {
       }
     }
   }
+  const dialog = root.querySelector('[role="dialog"]');
+  document.body.classList.toggle("has-modal", !!dialog);
+  if (dialog && !hadModal) dialog.querySelector("input:not([type=hidden]),select,button")?.focus();
+  if (!dialog && hadModal && modalTrigger) {
+    root.querySelector(modalTrigger)?.focus();
+    modalTrigger = null;
+  }
 }
 
 function toast(message, error = false) {
   const holder = document.getElementById("toast-host");
   const item = document.createElement("div");
   item.className = "toast " + (error ? "error" : "success");
+  item.setAttribute("role", error ? "alert" : "status");
   item.textContent = message;
   holder.appendChild(item);
   setTimeout(() => item.remove(), 6500);
@@ -100,8 +113,10 @@ async function refresh(force = false) {
   if (!state.user) {
     return;
   }
+  const current = session.capture();
   const remote = await api.get("/api/bootstrap");
   const remoteHash = await C.objectHash(remote);
+  if (!current() || !state.user) return;
   const changed = remoteHash !== state.remoteHash;
   state.remote = remote;
   state.user = remote.user;
@@ -121,10 +136,11 @@ async function refresh(force = false) {
         }
       }
     }
+    if (!current() || !state.user) return;
     render();
   }
   for (const session of remote.live) {
-    if (session.senderId === state.user.id && session.state === "accepted" && state.outgoing.has(session.id) && !state.sending.has(session.id)) {
+    if (!state.busy && !state.sending.size && session.senderId === state.user.id && session.state === "accepted" && state.outgoing.has(session.id)) {
       state.sending.add(session.id);
       sendLivePayload(session).catch(fail).finally(() => state.sending.delete(session.id));
     }
@@ -159,6 +175,7 @@ async function auth(form) {
     response = await api.post("/api/login", { email, authProof });
     identity = await C.unlockAccount(email, password, response.bundle, response.user.public);
   }
+  session.renew();
   api.setToken(response.token);
   state.user = response.user;
   state.identity = identity;
@@ -175,8 +192,12 @@ async function auth(form) {
 }
 
 async function logout() {
-  await api.post("/api/logout", {}).catch(() => {});
+  session.renew();
+  // Capture the authenticated request, then close local access immediately.
+  const closing = api.post("/api/logout", {}).catch(() => {});
   api.setToken("");
+  downloads.clear();
+  document.getElementById("toast-host").replaceChildren();
   if (state.identity?.vaultKey) {
     state.identity.vaultKey.fill(0);
   }
@@ -194,12 +215,17 @@ async function logout() {
   state.admin = null;
   state.trash = null;
   state.remoteHash = "";
+  state.remote = { users: [], contacts: [], files: [], shares: [], live: [], activity: [] };
+  state.signatures.clear();
+  state.verified.clear();
+  state.search = "";
   state.incoming.clear();
   state.outgoing.clear();
   state.liveFile = null;
   state.authMode = "login";
   progress();
   render();
+  await closing;
 }
 
 async function upload(file) {
@@ -264,19 +290,7 @@ async function fileKey(file) {
 
 function download(bytes, name, type = "application/octet-stream") {
   const blob = bytes instanceof Blob ? bytes : new Blob([bytes], { type });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = name;
-  anchor.className = "button primary";
-  anchor.textContent = "Lưu tệp: " + name;
-  const holder = document.getElementById("download-host");
-  holder.replaceChildren(anchor);
-  anchor.click();
-  setTimeout(() => {
-    URL.revokeObjectURL(url);
-    anchor.remove();
-  }, 120000);
+  downloads.show(blob, name);
 }
 
 async function openFile(fileId, save) {
@@ -313,6 +327,7 @@ async function openFile(fileId, save) {
     }
     toast(save ? "Tệp đã sẵn sàng: " + manifest.name : "Tệp đã được kiểm tra thành công.");
   } finally {
+    for (const part of plaintext) part.fill(0);
     key.fill(0);
     progress();
     render();
@@ -408,17 +423,19 @@ async function acceptLive(liveId) {
 }
 
 async function sendLivePayload(session) {
+  progress("Đang kết nối để gửi tệp…");
   const memory = state.outgoing.get(session.id);
   const recipient = userById(session.recipientId);
+  let derived;
+  try {
   await checkPinned(recipient);
   await C.verify(recipient.public, session.acceptance, session.acceptSignature);
   C.assert(session.acceptance.id === session.id && session.acceptance.recipientId === recipient.id && session.acceptance.offerHash === await C.objectHash(session.offer), "Acceptance không ràng buộc đúng offer");
-  const derived = await C.sessionKey(memory.privateKey, session.acceptance.publicKey, session.offer, session.acceptance);
+  derived = await C.sessionKey(memory.privateKey, session.acceptance.publicKey, session.offer, session.acceptance);
   memory.privateKey = null;
   memory.key = derived.key;
   const prefix = C.randomBytes(8);
   const hashes = [];
-  try {
     for (let index = 0; index < session.offer.total; index += 1) {
       progress(`Đang gửi ${Math.round(index / session.offer.total * 100)}% · ${memory.file.name}`);
       const raw = new Uint8Array(await memory.file.slice(index * C.CHUNK_SIZE, (index + 1) * C.CHUNK_SIZE).arrayBuffer());
@@ -435,13 +452,16 @@ async function sendLivePayload(session) {
     await refresh(true);
     toast("Tệp đã chuyển xong. Người nhận có thể tải xuống.");
   } finally {
-    derived.key.fill(0);
+    derived?.key.fill(0);
     memory.key = null;
+    // A failed transfer must not retry automatically with a discarded DH secret.
+    state.outgoing.delete(session.id);
     progress();
   }
 }
 
 async function receiveLive(liveId) {
+  progress("Đang chuẩn bị nhận tệp…");
   const session = liveById(liveId);
   const memory = state.incoming.get(liveId);
   C.assert(memory && session?.completion, "Phiên này đã đóng trên thiết bị. Hãy yêu cầu người gửi tạo lời mời mới.");
@@ -464,6 +484,7 @@ async function receiveLive(liveId) {
   }
   C.assert(bytes === session.offer.size, "Kích thước live payload không khớp");
   download(new Blob(output, { type: session.offer.mime }), session.offer.name);
+  for (const part of output) part.fill(0);
   memory.key.fill(0);
   state.incoming.delete(liveId);
   await api.post(`/api/live/${liveId}/ack`, {});
@@ -484,18 +505,27 @@ async function uploadChunk(path, raw) {
 }
 
 async function loadAdmin() {
-  state.admin = await api.get("/api/admin/overview");
+  const current = session.capture();
+  const admin = await api.get("/api/admin/overview");
+  if (!current() || !state.user) return;
+  state.admin = admin;
   render();
 }
 
 async function action(event) {
   const nav = event.target.closest("[data-view]");
   if (nav) {
+    if (state.busy) return toast("Chờ thao tác hiện tại hoàn tất.");
     state.view = nav.dataset.view;
     state.modal = null;
     history.replaceState({}, "", state.view === "admin" ? "/admin" : state.view === "setup" ? "/setup" : "/");
     render();
     if (state.view === "admin" && state.user.role === "admin") await loadAdmin();
+    if (state.view === "trash") {
+      progress("Đang mở thùng rác…");
+      state.trash = (await api.get("/api/trash")).files;
+      progress();
+    }
     return;
   }
   const element = event.target.closest("[data-action]");
@@ -520,6 +550,18 @@ async function action(event) {
     render();
   } else if (action === "check-service") {
     await checkService();
+  } else if (action === "toggle-password") {
+    const input = document.getElementById(element.dataset.target);
+    const shown = input.type === "password";
+    input.type = shown ? "text" : "password";
+    element.textContent = shown ? "Ẩn" : "Hiện";
+    element.setAttribute("aria-pressed", String(shown));
+    input.focus();
+  } else if (action === "clear-filters") {
+    state.search = "";
+    state.fileType = "all";
+    render();
+    document.getElementById("search").value = "";
   } else if (action === "logout") {
     await logout();
   } else if (action === "upload") {
@@ -543,6 +585,7 @@ async function action(event) {
     event.preventDefault();
     document.getElementById("live-input").click();
   } else if (action === "inspect" || action === "share") {
+    modalTrigger = '[data-action="share"][data-id="' + id + '"]';
     state.modal = { type: action, id };
     render();
   } else if (action === "download" || action === "verify-file") {
@@ -561,8 +604,10 @@ async function action(event) {
     state.modal = null;
     render();
   } else if (action === "revoke") {
+    progress("Đang thu hồi quyền truy cập…");
     await api.remove("/api/shares/" + id);
     await refresh(true);
+    progress();
     toast("Đã thu hồi quyền tải tiếp theo.");
   } else if (action === "accept-live") {
     await acceptLive(id);
@@ -574,22 +619,28 @@ async function action(event) {
   } else if (action === "new-tab") {
     window.open(location.origin, "_blank", "noopener");
   } else if (action === "trash-file") {
+    progress("Đang chuyển tệp vào thùng rác…");
     await api.remove("/api/files/" + id);
     await refresh(true);
-    toast("Đã chuyển vào thùng rác. Bạn có thể khôi phục trong Tài khoản.");
+    progress();
+    toast("Đã chuyển vào thùng rác. Mở Thùng rác để khôi phục.");
   } else if (action === "load-trash") {
     state.trash = (await api.get("/api/trash")).files;
     render();
   } else if (action === "restore-file") {
+    progress("Đang khôi phục tệp…");
     await api.post(`/api/files/${id}/restore`, {});
     state.trash = (await api.get("/api/trash")).files;
     await refresh(true);
+    progress();
     toast("Đã khôi phục tệp.");
   } else if (action === "admin-refresh") {
     await loadAdmin();
   } else if (action === "admin-toggle") {
+    progress("Đang cập nhật tài khoản…");
     await api.post("/api/admin/user", { userId: id, enabled: element.dataset.enabled === "true" });
     await loadAdmin();
+    progress();
   }
 }
 
@@ -625,8 +676,10 @@ root.addEventListener("submit", (event) => {
       progress();
       toast("Đã kích hoạt quản trị viên.");
     } else if (form.dataset.form === "admin-quota") {
+      progress("Đang lưu hạn mức…");
       await api.post("/api/admin/user", { userId: form.dataset.id, quota: Number(form.querySelector("select").value) });
       await loadAdmin();
+      progress();
       toast("Đã cập nhật hạn mức.");
     }
   };
@@ -638,6 +691,7 @@ root.addEventListener("change", (event) => {
     render();
   }
   if (event.target.id === "upload-input") {
+    if (state.busy) return;
     const selected = Array.from(event.target.files);
     (async () => { for (const file of selected) await upload(file); })().catch(fail);
   }
@@ -706,16 +760,29 @@ function updateService() {
   if (submit) submit.disabled = state.service !== "ready" || !!state.busy;
 }
 checkService();
-document.addEventListener("keydown", (event) => { if (event.key === "Escape" && state.modal) { state.modal = null; render(); } });
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && state.modal) { state.modal = null; render(); }
+  if (event.key === "Tab" && state.modal) {
+    const items = [...root.querySelectorAll('.modal button:not(:disabled),.modal input:not([type=hidden]),.modal select,.modal a[href]')];
+    const first = items[0], last = items.at(-1);
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+  }
+});
+window.addEventListener("beforeunload", event => {
+  if (state.busy || state.outgoing.size || state.incoming.size) { event.preventDefault(); event.returnValue = ""; }
+});
 setInterval(async () => {
-  if (!state.user || state.polling) {
+  if (!state.user || state.polling || state.busy || document.activeElement?.type === "password") {
     return;
   }
   state.polling = true;
+  const current = session.capture();
   try {
     await refresh();
     if (state.view === "admin" && state.user?.role === "admin") await loadAdmin();
   } catch (error) {
+    if (!current() || !state.user) return;
     if (state.connected) {
       state.connected = false;
       toast(error.message, true);

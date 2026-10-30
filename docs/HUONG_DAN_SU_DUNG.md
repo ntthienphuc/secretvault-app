@@ -1,75 +1,57 @@
-# SecretVault 2 — hướng dẫn sử dụng
+# Hướng dẫn SecretVault Online
 
-## Chạy trên Windows bằng bộ cài
+Cập nhật ngày 30/10/2026 cho web và app Windows Online 3.0.1.
 
-1. Mở `SecretVault-Setup-2.2.0-x64.exe` trong thư mục `release` và chọn Install. Không cần cài Python/Node trên máy dùng app.
-2. Mở SecretVault từ Start Menu. Bảng điều khiển khởi chạy Python server cục bộ và mở trình duyệt tại `http://127.0.0.1:8765`.
-3. Chọn **Tạo tài khoản**, nhập email, tên và mật khẩu tối thiểu 10 ký tự. App tạo danh tính khóa công khai trên trình duyệt và mã hóa private key trước khi lưu.
-4. Chọn **Mã hóa tệp** để lưu file vào vault. Mỗi tệp tối đa 256 MiB; từng chunk 1 MiB dùng IV riêng và AES-GCM.
-5. Bấm **Khóa & đăng xuất** khi dùng xong. Đóng bảng điều khiển để tắt server cục bộ. Đóng tab không tự tắt server.
+## Mở ứng dụng
 
-Đây là app desktop có bảng điều khiển Python và giao diện web cục bộ trong Chrome/Edge. Không phải cửa sổ webview nhúng. Bộ cài phát triển chưa có chứng chỉ ký mã Authenticode thương mại.
+Truy cập https://secretvault-online.vercel.app bằng Chrome hoặc Edge trên PC; dùng trình duyệt hiện đại trên điện thoại. Trên Windows x64, chạy bộ cài SecretVault-Online-Setup-3.0.1-x64.exe rồi mở SecretVault Online. Máy khách không cần Python hay server riêng. Web và app cùng tài khoản, tệp và danh bạ; hai người không cần cùng mạng.
 
-App cài mặc định ở `%LOCALAPPDATA%\Programs\SecretVault`. Dữ liệu nằm riêng tại `%LOCALAPPDATA%\SecretVault\v2`, nên cập nhật hoặc gỡ app không chủ động xóa vault. Không có tài khoản hoặc mật khẩu dùng chung mặc định.
+Lần mở đầu có thể phải chờ máy chủ miễn phí thức dậy. Đợi dòng **Đã kết nối an toàn** rồi đăng nhập; nếu thất bại, bấm **Kết nối lại**. Nếu cửa sổ Windows không mở được WebView2, chọn mở bản web khi ứng dụng đề nghị.
 
-## Dùng thử hai tài khoản trên một PC
+## Tài khoản
 
-- Tab 1: đăng ký Alice bằng email của bạn dùng cho thử nghiệm.
-- Chọn **Mở tab tài khoản khác** hoặc mở tab mới tới cùng URL. Đăng ký Bob bằng email khác. Hai tab có session riêng.
-- Trong Danh bạ của mỗi người, tìm email người kia. Đối chiếu fingerprint với người đó rồi bấm **Ghim public key này**. Đây là bước thiết lập tin cậy lần đầu.
+Chọn **Tạo tài khoản**, nhập tên, email và mật khẩu ít nhất 10 ký tự, rồi nhập lại mật khẩu. Nút **Hiện/Ẩn** giúp kiểm tra mật khẩu đang gõ. Giữ mật khẩu ở nơi an toàn: bản demo chưa xác minh email và chưa hỗ trợ khôi phục mật khẩu.
 
-### Chia sẻ offline bằng ElGamal
+Đăng nhập cùng tài khoản trên thiết bị khác để mở tệp đã lưu. Tải lại trang hoặc đóng app sẽ khóa phiên trên thiết bị; bạn đăng nhập lại bình thường. Khi dùng máy chung, bấm **Đăng xuất**. Liên kết tải tệp đã giải mã trong app được dọn khi đăng xuất; những bản đã lưu trong Downloads vẫn do bạn quản lý.
 
-Alice tải một tệp lên vault → bấm nút chia sẻ ở hàng tệp → chọn Bob → Tạo envelope & ký. Alice có thể đăng xuất. Bob vào **Được chia sẻ** rồi giải mã và tải tệp bằng private key của mình.
+## Lưu và nhận tệp
 
-Offline ở đây có nghĩa **người gửi không cần online**, còn máy chủ lưu ciphertext vẫn phải chạy khi người nhận tải. Nếu PC Alice cũng chính là server và PC ấy tắt, Bob phải chờ server mở lại hoặc dùng một host riêng luôn chạy.
+1. Trong **Tệp của tôi**, bấm **Tải tệp lên** hoặc kéo thả. Có thể chọn nhiều tệp; app xử lý lần lượt.
+2. Chờ thông báo đã tải lên. Mỗi tệp tối đa 25 MiB; tên tệp tối đa 240 ký tự.
+3. Tìm bằng ô tìm kiếm, lọc tài liệu/hình ảnh hoặc sắp xếp theo tên/ngày. Nếu không thấy kết quả, bấm **Xóa bộ lọc**.
+4. Bấm biểu tượng tải xuống. App kiểm tra và giải mã trên thiết bị rồi chuyển tệp cho trình duyệt lưu.
+5. Nếu trình duyệt chưa tải, dùng nút **Lưu tệp** xuất hiện bên dưới. Liên kết này hết hạn sau hai phút; bấm tải lại nếu cần. Chọn nơi lưu khi trình duyệt hoặc app hỏi.
 
-Trong Crypto Inspector, **chữ ký hợp lệ** là metadata và các hash có chữ ký đã kiểm tra. **Nội dung hợp lệ** chỉ xuất hiện sau khi tải và xác minh từng hash/tag AES-GCM. Bạn có thể tải JSON bằng chứng, không chứa private key.
+## Chia sẻ cho người mở sau
 
-Thu hồi chia sẻ chặn lần tải tiếp. Không xóa bản rõ hoặc khóa mà người nhận đã giữ trước đó.
+Người nhận cần có tài khoản SecretVault. Tại tệp, bấm **Chia sẻ**, nhập đúng email của họ hoặc chọn danh bạ, rồi bấm **Chia sẻ tệp**. Họ mở **Được chia sẻ** để tải. Bạn có thể đăng xuất sau khi chia sẻ thành công.
 
-### Gửi live bằng Diffie–Hellman
+Mở lại hộp thoại chia sẻ để xem người có quyền và **Thu hồi**. Thu hồi chỉ chặn những lần tải tiếp theo; không xóa được bản người nhận đã lưu. Ứng dụng xử lý bảo vệ tệp tự động, không yêu cầu nhập khóa.
 
-Hai người cùng mở app → người gửi chọn tệp và liên hệ online → gửi lời mời → người nhận bấm **Nhận an toàn** → browser ký và xác minh hai public key DH → HKDF tạo khóa phiên → chuyển ciphertext từng khối → người nhận bấm **Xác minh, giải mã & tải**.
+## Gửi trực tiếp
 
-Phiên tối đa 15 phút. Refresh tab/đăng xuất giữa phiên làm mất khóa tạm; tạo phiên mới để gửi lại. Kênh Python dùng polling 3 giây, không phải P2P trực tiếp hay WebRTC. Ciphertext live được dọn khi phiên hết hạn và host xử lý request kế tiếp.
+Thêm người nhận bằng email trong **Danh bạ**. Cả hai mở SecretVault. Người gửi vào **Gửi trực tiếp**, chọn tệp và người nhận đang online, gửi lời mời. Người nhận bấm **Nhận tệp**, chờ tệp chuyển xong rồi **Tải xuống**.
 
-Nếu trình duyệt chặn lần tải tự động, bấm liên kết **Lưu tệp: ...** xuất hiện phía trên. Liên kết tồn tại hai phút; có thể bấm giải mã lại để tạo mới.
+Giữ cả hai trang mở. Lời mời có hiệu lực 14 phút. Nếu tải lại trang, mất phiên hoặc server khởi động lại, tạo lời mời mới. Với người không online, dùng chia sẻ từ **Tệp của tôi**.
 
-## Dùng hai PC hoặc dùng qua Internet
+## Thùng rác và dung lượng
 
-**Dùng trong LAN với bản 2.2:** máy host mở **SecretVault - Host LAN** và xuất gói ZIP; máy khách chạy `Connect.cmd` một lần rồi dùng shortcut **SecretVault LAN**. Xem [LAN_WINDOWS.md](LAN_WINDOWS.md).
+Biểu tượng thùng rác ở mỗi tệp chuyển tệp sang vùng có thể khôi phục. Mở **Thùng rác** ở thanh bên hoặc nút cùng tên trên trang tệp. Trên điện thoại, cũng có thể mở từ **Tài khoản**.
 
-Hai PC phải kết nối **cùng một host**, ví dụ `https://vault.example.com`. Mỗi PC mở bảng điều khiển SecretVault, nhập URL trong ô **Kết nối tới host HTTPS**, rồi đăng nhập trên địa chỉ đó. Máy khách cũng có thể mở URL trực tiếp trong Chrome/Edge mà không cần bộ cài.
+Bấm **Khôi phục** để đưa tệp về kho. Các quyền chia sẻ chưa thu hồi cũng hoạt động lại. Thùng rác vẫn tính vào dung lượng; chưa có xóa vĩnh viễn trong UI này. Tài khoản mặc định có 100 MiB, toàn demo 512 MiB và tối đa 50 tài khoản. Nếu đầy, liên hệ quản trị viên để xem lại hạn mức.
 
-`127.0.0.1` luôn là chính máy đang dùng. Không gửi địa chỉ này cho PC khác. Việc cài app trên hai PC không tự đồng bộ hai server SQLite riêng.
+## Quản trị
 
-Backend Python hỗ trợ HTTPS trực tiếp với chứng chỉ hợp lệ hoặc đứng sau Caddy. Xem `HOSTING.md`. Cấu hình hosting được chuẩn bị sẵn; bản giao không tự tạo domain, mua VPS hay public/deploy server.
+Dashboard tại https://secretvault-online.vercel.app/admin chỉ dành cho tài khoản đã được kích hoạt quản trị. Chủ ứng dụng dùng shortcut kích hoạt riêng được lưu trên máy; không gửi shortcut này cho người dùng khác.
 
-## Sao lưu và mở lại trên thiết bị khác
+Admin xem số tài khoản, dung lượng, tệp, sự kiện và phiên chuyển. Có thể điều chỉnh hạn mức hoặc tạm dừng tài khoản. Dashboard không cung cấp nội dung tệp đã giải mã hay khóa riêng.
 
-- Đăng nhập cùng host từ thiết bị khác bằng email/mật khẩu: browser tải private bundle đã mã hóa, rồi giải mã cục bộ. Không phụ thuộc vào localStorage chứa private key thô.
-- Trong **Tài khoản & kết nối**, tải gói khóa mã hóa để giữ bản sao. Gói này cần mật khẩu; nó không thay cho bản sao file/cơ sở dữ liệu server.
-- Bảng điều khiển PC có nút sao lưu toàn bộ server thành ZIP: SQLite snapshot + thư mục ciphertext. Nút này tạo snapshot nhất quán của DB; trong lúc sao lưu, chờ các upload hoàn tất.
-- Khôi phục: tắt server; giải nén ZIP vào một thư mục dữ liệu **mới**; chạy `SecretVault.exe --data-dir "D:\SecretVault-restored"`. Nếu chạy source, thêm `--data-dir` sau `app.py`. Giữ bản gốc, không ghi đè khi chưa kiểm tra.
-- Mất mật khẩu có thể khiến mất khả năng mở khóa. App chưa có email reset/recovery hoặc xoay khóa; email hiện dùng như tên đăng nhập, chưa xác minh sở hữu email.
+## Khi có lỗi
 
-## Chạy từ mã nguồn / xử lý cổng bận
+- Sai email/mật khẩu: kiểm tra email và nút hiện mật khẩu; app không có nút đặt lại mật khẩu.
+- Không thấy tệp được chia sẻ: xác nhận đúng email tài khoản, bỏ bộ lọc và bấm làm mới.
+- Người nhận ngoại tuyến: chuyển sang chia sẻ để mở sau hoặc chờ họ đăng nhập.
+- Không xác minh được tệp/kết nối: thao tác dừng; thử lại và liên hệ admin nếu còn lỗi. Không bỏ qua kiểm tra bảo vệ.
+- Mất mạng trong lúc upload: chờ thông báo, kiểm tra danh sách trước khi gửi lại. App chưa có tiếp tục upload xuyên lần đóng trang.
 
-Python 3.11 trở lên:
-
-```powershell
-py -3.11 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe app.py
-```
-
-Chỉ chạy server, không mở bảng điều khiển:
-
-```powershell
-.\.venv\Scripts\python.exe app.py --headless --no-browser
-```
-
-Cổng bận: dùng `--port 8766`. App không tắt tiến trình khác để chiếm cổng. Nếu instance SecretVault 2 cùng cổng đã chạy, launcher có thể mở lại instance ấy. Không chia sẻ cổng với bản v1.
-
-Source v1 được giữ nguyên tại `archive/v1_20261022`. Dữ liệu/khóa v1 không tự đổi sang v2 vì cấu trúc mật mã khác; muốn mang file sang, mở đúng trình duyệt và server v1 để giải mã, rồi upload vào v2.
+Đây là triển khai demo nhỏ. Render miễn phí có thời gian ngủ; app chưa có SLA luôn sẵn sàng, khôi phục mật khẩu hoặc kiểm toán bảo mật độc lập. Thử responsive không thay thế kiểm thử trên điện thoại vật lý.

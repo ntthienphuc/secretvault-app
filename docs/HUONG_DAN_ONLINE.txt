@@ -1,0 +1,26 @@
+SECRET VAULT ONLINE 3.0.1
+Cập nhật 30/10/2026
+
+WEB: https://secretvault-online.vercel.app
+ADMIN: https://secretvault-online.vercel.app/admin
+
+Web và app Windows dùng chung tài khoản và dữ liệu. Không cần cùng Wi-Fi.
+Máy người dùng không cần cài Python, chứng chỉ hoặc chạy server.
+
+1. Chạy bộ cài SecretVault-Online-Setup-3.0.1-x64.exe, hoặc mở link web.
+2. Chờ dòng Đã kết nối an toàn. Máy chủ miễn phí có thể cần khoảng một phút.
+3. Tạo tài khoản bằng email và mật khẩu ít nhất 10 ký tự. Giữ mật khẩu:
+   hiện chưa có khôi phục mật khẩu.
+4. Tải tệp vào Tệp của tôi; bấm Chia sẻ rồi nhập email người nhận đã có tài khoản.
+5. Người nhận mở Được chia sẻ và tải xuống. Người gửi có thể offline.
+6. Gửi trực tiếp: thêm Danh bạ, cả hai online, gửi lời mời, xác nhận, tải xuống.
+   Giữ app mở. Tải lại trang hoặc mất phiên cần tạo lời mời mới.
+7. Thùng rác có thể khôi phục; vẫn tính dung lượng và khôi phục quyền chia sẻ cũ.
+
+25 MiB/tệp; mặc định 100 MiB/tài khoản. Toàn demo 512 MiB, tối đa 50 tài khoản.
+Sau giải mã, trình duyệt/app lưu tệp. Nếu chưa tải, bấm Lưu tệp ở thẻ hiện ra.
+Liên kết tệp này hết hạn sau hai phút và bị dọn ngay khi đăng xuất.
+
+Chủ ứng dụng kích hoạt admin bằng shortcut riêng trên máy; không gửi mã cho người khác.
+Bộ cài chưa ký số. Nếu WebView2 không chạy, chọn mở bản web.
+Đây là bản đồ án đã kiểm thử chức năng, chưa có kiểm toán bảo mật độc lập.

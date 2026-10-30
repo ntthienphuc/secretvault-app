@@ -9,12 +9,13 @@ import traceback
 import webbrowser
 from pathlib import Path
 
-VERSION = "3.0.0"
+VERSION = "3.0.1"
 WEB_URL = "https://secretvault-online.vercel.app"
 
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--version", action="version", version=VERSION)
     parser.add_argument("--browser", action="store_true", help="Open the same workspace in the default browser")
     parser.add_argument("--diagnose", action="store_true", help="Check public endpoints without opening the UI")
     args = parser.parse_args()

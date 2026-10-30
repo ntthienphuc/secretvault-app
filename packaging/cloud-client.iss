@@ -1,9 +1,11 @@
-#define MyAppVersion "3.0.0"
+#define MyAppVersion "3.0.1"
 [Setup]
 AppId=SecretVaultOnlineV3
 AppName=SecretVault Online
 AppVersion={#MyAppVersion}
 AppPublisher=SecretVault
+AppPublisherURL=https://secretvault-online.vercel.app
+AppSupportURL=https://secretvault-online.vercel.app
 DefaultDirName={localappdata}\Programs\SecretVaultOnline
 DefaultGroupName=SecretVault Online
 PrivilegesRequired=lowest
@@ -24,11 +26,12 @@ Name: "desktopicon"; Description: "Create desktop shortcut"; GroupDescription: "
 
 [Files]
 Source: "..\dist\SecretVaultOnline\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "..\docs\CLOUD_ONLINE.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\docs\HUONG_DAN_ONLINE.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{autoprograms}\SecretVault Online"; Filename: "{app}\SecretVaultOnline.exe"
 Name: "{autoprograms}\SecretVault Online - Web"; Filename: "{app}\SecretVaultOnline.exe"; Parameters: "--browser"
+Name: "{autoprograms}\SecretVault Online - Huong dan"; Filename: "{app}\HUONG_DAN_ONLINE.txt"
 Name: "{autodesktop}\SecretVault Online"; Filename: "{app}\SecretVaultOnline.exe"; Tasks: desktopicon
 
 [Run]

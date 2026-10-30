@@ -1,59 +1,67 @@
-# SecretVault 2.2
+# SecretVault Online 3.0.1
 
-Ứng dụng đồ án với đúng ba nội dung: **khóa công khai, gửi live bằng Diffie–Hellman, chia sẻ offline bằng ElGamal Hybrid**. Backend Python, giao diện web tiếng Việt, SQLite và mã hóa tệp ở browser.
+Ứng dụng lưu trữ và chia sẻ tệp mã hóa với backend Python. Bản bàn giao hiện tại dùng chung dịch vụ online cho web, điện thoại và Windows. Không cần cùng Wi-Fi, mở cổng router hay cài Python trên máy người dùng.
 
-Giao diện 2.1 tham khảo bố cục quản lý tệp của [Proton Drive](https://proton.me/drive), tùy biến thành nhận diện SecretVault: nền sáng, tím lavender, icon SVG, font Be Vietnam Pro đóng gói offline, bộ lọc và chế độ danh sách/lưới.
+## Dùng ngay
 
-## Dùng ngay trên PC
+- **Web:** https://secretvault-online.vercel.app
+- **Quản trị:** https://secretvault-online.vercel.app/admin
+- **Windows x64:** bộ cài duy nhất trong `release/SecretVault-Online-Setup-3.0.1-x64.exe`.
+- **Gói bàn giao:** `deliverables/SecretVault_Online/`; tài liệu và slide nằm trong `Tai_lieu/`.
 
-Mở `release/SecretVault-Setup-2.2.0-x64.exe`, cài rồi mở SecretVault từ Start Menu. App có Python runtime đi kèm; người dùng không cần cài Python hoặc npm. Launcher mở server cục bộ và browser, hoặc mở host HTTPS đã lưu trên máy khách. Dữ liệu riêng tại `%LOCALAPPDATA%\SecretVault\v2`.
+Đăng ký bằng email và mật khẩu ít nhất 10 ký tự. Tải tệp vào **Tệp của tôi**, chọn **Chia sẻ**, nhập email tài khoản người nhận. Người nhận mở **Được chia sẻ** trên web hoặc app Windows. Gửi trực tiếp cần cả hai giữ app mở.
 
-**Một host cho ba máy trong LAN:** mở **SecretVault - Host LAN**, xuất ZIP máy khách, hai máy còn lại giải nén và chạy `Connect.cmd` một lần. Xem [hướng dẫn LAN Windows](docs/LAN_WINDOWS.md). Tất cả dùng cùng địa chỉ HTTPS và tài khoản riêng; máy khách dùng trình duyệt, không cần cài Python.
+Mỗi tệp tối đa **25 MiB**, mỗi tài khoản mặc định **100 MiB**, toàn bộ demo **512 MiB** và **50 tài khoản**. Thùng rác vẫn tính dung lượng; khôi phục mở lại quyền chia sẻ chưa thu hồi. Chưa có khôi phục mật khẩu.
 
-- [Hướng dẫn sử dụng](docs/HUONG_DAN_SU_DUNG.md): đăng ký, danh bạ, hai tab, offline share, live transfer, backup.
-- [Đối chiếu ba nội dung với slide](docs/DOI_CHIEU_SLIDE.md): điểm sai của v1 và sửa ở v2.
-- [Cách host chung cho hai PC](docs/HOSTING.md): HTTPS + Python/Caddy; chưa triển khai public.
-- [Bằng chứng kiểm thử](audit/integration-results.json): kiểm thử API/crypto có trường hợp dữ liệu bị sửa và sai quyền.
-- [Thiết kế giao diện](docs/UI_DESIGN.md): mẫu tham khảo, các màn hình tùy biến và giấy phép font.
+## Tài liệu hiện hành
 
-## Chạy mã nguồn
+- [Hướng dẫn người dùng](docs/HUONG_DAN_SU_DUNG.md)
+- [Vận hành và kiến trúc Online](docs/CLOUD_ONLINE.md)
+- [Trạng thái và bằng chứng kiểm thử](docs/CLOUD_STATUS.md)
+- [Các thay đổi 3.0.1](docs/CHANGELOG.md)
+- [Đối chiếu nội dung môn học](docs/DOI_CHIEU_SLIDE.md)
 
-Python 3.11 trở lên. Chạy `start.bat` hoặc:
+Phạm vi đồ án giữ nguyên: **khóa công khai, Diffie–Hellman cho gửi trực tiếp và ElGamal Hybrid cho chia sẻ khi người nhận mở sau**. AES-GCM, HKDF, chữ ký và hàm băm hỗ trợ các luồng này. Giao diện người dùng không yêu cầu thao tác với khóa.
+
+## Mã nguồn
+
+| Thành phần | Vị trí |
+|---|---|
+| Web online tiếng Việt | `web/` |
+| API Python và lưu trữ bền vững | `cloudserver/` |
+| Nền tảng API, ACL và kiểm tra mật mã | `vaultserver/` |
+| App Windows online | `cloud_client_app.py` |
+| Build app Windows | `packaging/build-cloud-client.ps1` |
+| Kiểm thử API, mật mã và hồi quy web | `tests/` |
+| Bằng chứng các đợt kiểm thử | `audit/` |
+
+Web được phát hành trên Vercel; API chạy Render; bucket Hugging Face riêng lưu bản mã và snapshot metadata. Chỉ **một instance** được ghi vào bucket. Frontend và app không chứa token hạ tầng hay mã kích hoạt quản trị.
+
+## Phát triển local
 
 ```powershell
-py -3.11 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe app.py
+py -3.11 -m venv .venv-cloud
+.venv-cloud\Scripts\python.exe -m pip install -r hosting/render-requirements.txt
+$env:SV_LOCAL_WEB='1'
+$env:PORT='8787'
+$env:SV_RUNTIME_DIR='audit/runtime-dev/local'
+$env:SV_PERSISTENT_DIR='audit/runtime-dev/persistent'
+.venv-cloud\Scripts\python.exe -m cloudserver.main
 ```
 
-Server không cần GUI:
+Mở http://127.0.0.1:8787. Hai đường dẫn dữ liệu phải dành riêng cho phát triển. Không dùng DB LAN thật hay bucket production làm fixture. Môi trường local mặc định không kết nối bucket online.
 
 ```powershell
-.\.venv\Scripts\python.exe app.py --headless --no-browser --port 8765
-```
-
-Mở `http://127.0.0.1:8765`. Mỗi tab đăng nhập một tài khoản riêng. Tất cả client muốn chia sẻ phải dùng chung một host; mỗi PC chạy một SQLite server độc lập không tự đồng bộ.
-
-## Tổ chức mã nguồn
-
-- `vaultserver/store.py`: DB, metadata, ACL helpers, ciphertext và backup.
-- `vaultserver/security.py`: password verifier, public key validation và xác minh chữ ký.
-- `vaultserver/server.py`: API có xác thực và kiểm tra ownership/recipient.
-- `vaultserver/desktop.py`: launcher PC, CLI và cấu hình host.
-- `public/src/crypto.js`: ElGamal/DH hữu hạn MODP3072, HKDF, AES-GCM, chữ ký hỗ trợ và bảo vệ private bundle.
-- `public/src/app.js`, `view.js`, `api.js`: các workflow và giao diện.
-- `tests/integration.mjs`: kiểm thử end-to-end qua HTTP thật.
-- `packaging/build.ps1`: PyInstaller + Inno Setup; tạo bộ cài x64.
-
-## Kiểm thử / đóng gói
-
-```powershell
-.\.venv\Scripts\python.exe app.py --headless --no-browser --port 8786 --data-dir audit/runtime-test
+node hosting/build-web.mjs
+node tests/web-regressions.mjs
+$env:SV_TEST_URL='http://127.0.0.1:8787'
 node tests/integration.mjs
 ```
 
-Chạy kiểm thử ở cửa sổ terminal khác với server. Dữ liệu QA riêng, không ghi vào vault người dùng. Build bằng `pwsh -File packaging/build.ps1` với Python 3.11 và Inno Setup 6 trên Windows.
+Build bộ cài bằng PowerShell 7, Python build environment và Inno Setup 6: `pwsh -File packaging/build-cloud-client.ps1`. Bộ cài chưa ký số.
 
-Offline nghĩa chủ tệp có thể offline, còn server vẫn cần chạy. Ghim fingerprint là TOFU, chưa là PKI có CA. ElGamal Hybrid của đồ án không phải HPKE đã chuẩn hóa. Mã BigInt tự cài chưa qua kiểm toán timing/bảo mật; không tuyên bố mức an toàn sản phẩm đã audit. Xem tài liệu đối chiếu để hiểu giới hạn.
+## Lưu trữ bản cũ
 
-Source bản cũ giữ ở `archive/v1_20261022`; không chạy lẫn dữ liệu v1 và v2.
+`app.py`, `host_app.py`, `client_app.py`, `public/` và tài liệu LAN phục vụ các phiên bản 2.x. Chúng được giữ để bảo toàn nguồn và tài khoản LAN cũ. Người dùng bản Online chỉ cần bộ cài Online hoặc link web phía trên. Các bộ cài cũ được chuyển khỏi thư mục phát hành hiện hành.
+
+Render miễn phí có thể ngủ khi không hoạt động, nên lần đầu mở cần chờ máy chủ. Đây là bản demo đồ án đã kiểm thử chức năng, chưa qua kiểm toán mật mã độc lập và chưa có cam kết luôn sẵn sàng.
